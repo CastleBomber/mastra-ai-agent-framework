@@ -1,0 +1,386 @@
+import EventEmitter from 'node:events';
+import type { Span } from '@opentelemetry/api';
+import type { Snapshot } from 'xstate';
+import type { z } from 'zod';
+import type { MastraUnion } from '../../action/index.js';
+import type { IMastraLogger } from '../../logger/index.js';
+import type { Mastra } from '../../mastra/index.js';
+import type { RuntimeContext } from '../../runtime-context/index.js';
+import type { LegacyStep as Step } from './step.js';
+import type { ResolverFunctionInput, ResolverFunctionOutput, RetryConfig, StepGraph, StepNode, WorkflowContext, LegacyWorkflowRunResult as WorkflowRunResult } from './types.js';
+import type { WorkflowInstance } from './workflow-instance.js';
+export declare class Machine<TSteps extends Step<any, any, any, any>[] = Step<any, any, any, any>[], TTriggerSchema extends z.ZodObject<any> = any, TResultSchema extends z.ZodObject<any> = any> extends EventEmitter {
+    #private;
+    logger: IMastraLogger;
+    name: string;
+    constructor({ logger, mastra, runtimeContext, workflowInstance, executionSpan, name, runId, steps, stepGraph, retryConfig, startStepId, }: {
+        logger: IMastraLogger;
+        mastra?: Mastra;
+        runtimeContext: RuntimeContext;
+        workflowInstance: WorkflowInstance;
+        executionSpan?: Span;
+        name: string;
+        runId: string;
+        steps: Record<string, StepNode>;
+        stepGraph: StepGraph;
+        retryConfig?: RetryConfig;
+        startStepId: string;
+    });
+    get startStepId(): string;
+    execute({ stepId, input, snapshot, resumeData, }?: {
+        stepId?: string;
+        input?: any;
+        snapshot?: Snapshot<any>;
+        resumeData?: any;
+    }): Promise<Pick<WorkflowRunResult<TTriggerSchema, TSteps, TResultSchema>, 'results' | 'activePaths' | 'runId' | 'timestamp'>>;
+    private initializeMachine;
+    getSnapshot(): import("xstate").MachineSnapshot<Omit<WorkflowContext<any, Step<string, any, any, any>[], Record<string, any>>, "getStepResult">, {
+        type: "RESET_TO_PENDING";
+        stepId: string;
+    } | {
+        type: "CONDITIONS_MET";
+        stepId: string;
+    } | {
+        type: "CONDITION_FAILED";
+        stepId: string;
+        error: string;
+    } | {
+        type: "SUSPENDED";
+        stepId: string;
+        suspendPayload?: any;
+        softSuspend?: any;
+    } | {
+        type: "WAITING";
+        stepId: string;
+    } | {
+        type: `xstate.error.actor.${string}`;
+        error: Error;
+    } | {
+        type: `xstate.done.actor.${string}`;
+        output: ResolverFunctionOutput;
+    }, {
+        [x: string]: import("xstate").ActorRefFromLogic<import("xstate").PromiseActorLogic<{
+            type: "CONDITIONS_MET";
+            error?: undefined;
+        } | {
+            type: "CONDITIONS_SKIP_TO_COMPLETED";
+            error?: undefined;
+        } | {
+            type: "CONDITIONS_LIMBO";
+            error?: undefined;
+        } | {
+            type: "CONDITIONS_SKIPPED";
+            error?: undefined;
+        } | {
+            type: "CONDITION_FAILED";
+            error: string;
+        }, {
+            context: WorkflowContext;
+            stepNode: StepNode;
+        }, import("xstate").EventObject>> | import("xstate").ActorRefFromLogic<import("xstate").PromiseActorLogic<{
+            type: "STEP_FAILED";
+            error: string;
+            stepId: string;
+            result?: undefined;
+        } | {
+            type: "STEP_WAITING";
+            stepId: string;
+            error?: undefined;
+            result?: undefined;
+        } | {
+            type: "STEP_SUCCESS";
+            result: any;
+            stepId: string;
+            error?: undefined;
+        }, ResolverFunctionInput, import("xstate").EventObject>> | import("xstate").ActorRefFromLogic<import("xstate").PromiseActorLogic<{
+            steps: {};
+        }, {
+            parentStepId: string;
+            context: WorkflowContext;
+        }, import("xstate").EventObject>> | undefined;
+    }, {
+        [x: string]: {} | {
+            [x: string]: {} | /*elided*/ any | {
+                [x: string]: {} | /*elided*/ any | /*elided*/ any;
+            };
+        } | {
+            [x: string]: {} | {
+                [x: string]: {} | /*elided*/ any | /*elided*/ any;
+            } | /*elided*/ any;
+        };
+    }, string, import("xstate").NonReducibleUnknown, import("xstate").MetaObject, {
+        readonly id: string;
+        readonly type: "parallel";
+        readonly context: ({ input }: {
+            spawn: {
+                <TSrc extends "conditionCheck" | "resolverFunction" | "spawnSubscriberFunction">(logic: TSrc, ...[options]: ({
+                    src: "conditionCheck";
+                    logic: import("xstate").PromiseActorLogic<{
+                        type: "CONDITIONS_MET";
+                        error?: undefined;
+                    } | {
+                        type: "CONDITIONS_SKIP_TO_COMPLETED";
+                        error?: undefined;
+                    } | {
+                        type: "CONDITIONS_LIMBO";
+                        error?: undefined;
+                    } | {
+                        type: "CONDITIONS_SKIPPED";
+                        error?: undefined;
+                    } | {
+                        type: "CONDITION_FAILED";
+                        error: string;
+                    }, {
+                        context: WorkflowContext;
+                        stepNode: StepNode;
+                    }, import("xstate").EventObject>;
+                    id: string | undefined;
+                } extends infer T ? T extends {
+                    src: "conditionCheck";
+                    logic: import("xstate").PromiseActorLogic<{
+                        type: "CONDITIONS_MET";
+                        error?: undefined;
+                    } | {
+                        type: "CONDITIONS_SKIP_TO_COMPLETED";
+                        error?: undefined;
+                    } | {
+                        type: "CONDITIONS_LIMBO";
+                        error?: undefined;
+                    } | {
+                        type: "CONDITIONS_SKIPPED";
+                        error?: undefined;
+                    } | {
+                        type: "CONDITION_FAILED";
+                        error: string;
+                    }, {
+                        context: WorkflowContext;
+                        stepNode: StepNode;
+                    }, import("xstate").EventObject>;
+                    id: string | undefined;
+                } ? T extends {
+                    src: TSrc;
+                } ? import("xstate").ConditionalRequired<[options?: ({
+                    id?: T["id"] | undefined;
+                    systemId?: string;
+                    input?: import("xstate").InputFrom<T["logic"]> | undefined;
+                    syncSnapshot?: boolean;
+                } & { [K in import("xstate").RequiredActorOptions<T>]: unknown; }) | undefined], import("xstate").IsNotNever<import("xstate").RequiredActorOptions<T>>> : never : never : never) | ({
+                    src: "resolverFunction";
+                    logic: import("xstate").PromiseActorLogic<{
+                        type: "STEP_FAILED";
+                        error: string;
+                        stepId: string;
+                        result?: undefined;
+                    } | {
+                        type: "STEP_WAITING";
+                        stepId: string;
+                        error?: undefined;
+                        result?: undefined;
+                    } | {
+                        type: "STEP_SUCCESS";
+                        result: any;
+                        stepId: string;
+                        error?: undefined;
+                    }, ResolverFunctionInput, import("xstate").EventObject>;
+                    id: string | undefined;
+                } extends infer T_1 ? T_1 extends {
+                    src: "resolverFunction";
+                    logic: import("xstate").PromiseActorLogic<{
+                        type: "STEP_FAILED";
+                        error: string;
+                        stepId: string;
+                        result?: undefined;
+                    } | {
+                        type: "STEP_WAITING";
+                        stepId: string;
+                        error?: undefined;
+                        result?: undefined;
+                    } | {
+                        type: "STEP_SUCCESS";
+                        result: any;
+                        stepId: string;
+                        error?: undefined;
+                    }, ResolverFunctionInput, import("xstate").EventObject>;
+                    id: string | undefined;
+                } ? T_1 extends {
+                    src: TSrc;
+                } ? import("xstate").ConditionalRequired<[options?: ({
+                    id?: T_1["id"] | undefined;
+                    systemId?: string;
+                    input?: import("xstate").InputFrom<T_1["logic"]> | undefined;
+                    syncSnapshot?: boolean;
+                } & { [K_1 in import("xstate").RequiredActorOptions<T_1>]: unknown; }) | undefined], import("xstate").IsNotNever<import("xstate").RequiredActorOptions<T_1>>> : never : never : never) | ({
+                    src: "spawnSubscriberFunction";
+                    logic: import("xstate").PromiseActorLogic<{
+                        steps: {};
+                    }, {
+                        parentStepId: string;
+                        context: WorkflowContext;
+                    }, import("xstate").EventObject>;
+                    id: string | undefined;
+                } extends infer T_2 ? T_2 extends {
+                    src: "spawnSubscriberFunction";
+                    logic: import("xstate").PromiseActorLogic<{
+                        steps: {};
+                    }, {
+                        parentStepId: string;
+                        context: WorkflowContext;
+                    }, import("xstate").EventObject>;
+                    id: string | undefined;
+                } ? T_2 extends {
+                    src: TSrc;
+                } ? import("xstate").ConditionalRequired<[options?: ({
+                    id?: T_2["id"] | undefined;
+                    systemId?: string;
+                    input?: import("xstate").InputFrom<T_2["logic"]> | undefined;
+                    syncSnapshot?: boolean;
+                } & { [K_2 in import("xstate").RequiredActorOptions<T_2>]: unknown; }) | undefined], import("xstate").IsNotNever<import("xstate").RequiredActorOptions<T_2>>> : never : never : never)): import("xstate").ActorRefFromLogic<import("xstate").GetConcreteByKey<import("xstate").Values<{
+                    conditionCheck: {
+                        src: "conditionCheck";
+                        logic: import("xstate").PromiseActorLogic<{
+                            type: "CONDITIONS_MET";
+                            error?: undefined;
+                        } | {
+                            type: "CONDITIONS_SKIP_TO_COMPLETED";
+                            error?: undefined;
+                        } | {
+                            type: "CONDITIONS_LIMBO";
+                            error?: undefined;
+                        } | {
+                            type: "CONDITIONS_SKIPPED";
+                            error?: undefined;
+                        } | {
+                            type: "CONDITION_FAILED";
+                            error: string;
+                        }, {
+                            context: WorkflowContext;
+                            stepNode: StepNode;
+                        }, import("xstate").EventObject>;
+                        id: string | undefined;
+                    };
+                    resolverFunction: {
+                        src: "resolverFunction";
+                        logic: import("xstate").PromiseActorLogic<{
+                            type: "STEP_FAILED";
+                            error: string;
+                            stepId: string;
+                            result?: undefined;
+                        } | {
+                            type: "STEP_WAITING";
+                            stepId: string;
+                            error?: undefined;
+                            result?: undefined;
+                        } | {
+                            type: "STEP_SUCCESS";
+                            result: any;
+                            stepId: string;
+                            error?: undefined;
+                        }, ResolverFunctionInput, import("xstate").EventObject>;
+                        id: string | undefined;
+                    };
+                    spawnSubscriberFunction: {
+                        src: "spawnSubscriberFunction";
+                        logic: import("xstate").PromiseActorLogic<{
+                            steps: {};
+                        }, {
+                            parentStepId: string;
+                            context: WorkflowContext;
+                        }, import("xstate").EventObject>;
+                        id: string | undefined;
+                    };
+                }>, "src", TSrc>["logic"]>;
+                <TLogic extends import("xstate").AnyActorLogic>(src: TLogic, ...[options]: import("xstate").ConditionalRequired<[options?: ({
+                    id?: never;
+                    systemId?: string;
+                    input?: import("xstate").InputFrom<TLogic> | undefined;
+                    syncSnapshot?: boolean;
+                } & { [K in import("xstate").RequiredLogicInput<TLogic>]: unknown; }) | undefined], import("xstate").IsNotNever<import("xstate").RequiredLogicInput<TLogic>>>): import("xstate").ActorRefFromLogic<TLogic>;
+            };
+            input: Omit<WorkflowContext<any, Step<string, any, any, any>[], Record<string, any>>, "getStepResult">;
+            self: import("xstate").ActorRef<import("xstate").MachineSnapshot<Omit<WorkflowContext<any, Step<string, any, any, any>[], Record<string, any>>, "getStepResult">, {
+                type: "RESET_TO_PENDING";
+                stepId: string;
+            } | {
+                type: "CONDITIONS_MET";
+                stepId: string;
+            } | {
+                type: "CONDITION_FAILED";
+                stepId: string;
+                error: string;
+            } | {
+                type: "SUSPENDED";
+                stepId: string;
+                suspendPayload?: any;
+                softSuspend?: any;
+            } | {
+                type: "WAITING";
+                stepId: string;
+            } | {
+                type: `xstate.error.actor.${string}`;
+                error: Error;
+            } | {
+                type: `xstate.done.actor.${string}`;
+                output: ResolverFunctionOutput;
+            }, Record<string, import("xstate").AnyActorRef | undefined>, import("xstate").StateValue, string, unknown, any, any>, {
+                type: "RESET_TO_PENDING";
+                stepId: string;
+            } | {
+                type: "CONDITIONS_MET";
+                stepId: string;
+            } | {
+                type: "CONDITION_FAILED";
+                stepId: string;
+                error: string;
+            } | {
+                type: "SUSPENDED";
+                stepId: string;
+                suspendPayload?: any;
+                softSuspend?: any;
+            } | {
+                type: "WAITING";
+                stepId: string;
+            } | {
+                type: `xstate.error.actor.${string}`;
+                error: Error;
+            } | {
+                type: `xstate.done.actor.${string}`;
+                output: ResolverFunctionOutput;
+            }, import("xstate").AnyEventObject>;
+        }) => {
+            mastra?: MastraUnion | undefined;
+            inputData: Record<string, any>;
+            steps: {
+                [x: string]: {
+                    status: "failed";
+                    error: string;
+                } | {
+                    status: "waiting";
+                } | {
+                    status: "skipped";
+                } | {
+                    status: "success";
+                    output: unknown;
+                } | {
+                    status: "suspended";
+                    suspendPayload?: any;
+                    output?: unknown;
+                } | {
+                    status: "success";
+                    output: any;
+                } | {
+                    status: "suspended";
+                    suspendPayload?: any;
+                    output?: any;
+                };
+            };
+            triggerData: any;
+            isResume?: {
+                runId: string;
+                stepId: string;
+            } | undefined;
+            attempts: Record<string, number>;
+        };
+        readonly states: any;
+    }> | undefined;
+}
+//# sourceMappingURL=machine.d.ts.map

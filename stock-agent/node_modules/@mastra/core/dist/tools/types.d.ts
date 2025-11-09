@@ -1,0 +1,70 @@
+import type { Tool, ToolV5, FlexibleSchema, ToolCallOptions, ToolExecutionOptions, Schema } from '@internal/external-types';
+import type { IAction, IExecutionContext, MastraUnion } from '../action/index.js';
+import type { TracingContext } from '../ai-tracing/index.js';
+import type { Mastra } from '../mastra/index.js';
+import type { RuntimeContext } from '../runtime-context/index.js';
+import type { ZodLikeSchema, InferZodLikeSchema } from '../types/zod-compat.js';
+import type { ToolStream } from './stream.js';
+export type VercelTool = Tool;
+export type VercelToolV5 = ToolV5;
+export type ToolInvocationOptions = ToolExecutionOptions | ToolCallOptions;
+/**
+ * Extended version of ToolInvocationOptions that includes Mastra-specific properties
+ * for suspend/resume functionality, stream writing, and tracing context.
+ */
+export type MastraToolInvocationOptions = ToolInvocationOptions & {
+    suspend?: (suspendPayload: any) => Promise<any>;
+    resumeData?: any;
+    writableStream?: WritableStream<any> | ToolStream<any>;
+    tracingContext?: TracingContext;
+};
+export type CoreTool = {
+    description?: string;
+    parameters: FlexibleSchema<any> | Schema;
+    outputSchema?: FlexibleSchema<any> | Schema;
+    execute?: (params: any, options: MastraToolInvocationOptions) => Promise<any>;
+} & ({
+    type?: 'function' | undefined;
+    id?: string;
+} | {
+    type: 'provider-defined';
+    id: `${string}.${string}`;
+    args: Record<string, unknown>;
+});
+export type InternalCoreTool = {
+    description?: string;
+    parameters: Schema;
+    outputSchema?: Schema;
+    execute?: (params: any, options: MastraToolInvocationOptions) => Promise<any>;
+} & ({
+    type?: 'function' | undefined;
+    id?: string;
+} | {
+    type: 'provider-defined';
+    id: `${string}.${string}`;
+    args: Record<string, unknown>;
+});
+export interface ToolExecutionContext<TSchemaIn extends ZodLikeSchema | undefined = undefined, TSuspendSchema extends ZodLikeSchema = any, TResumeSchema extends ZodLikeSchema = any> extends IExecutionContext<TSchemaIn> {
+    mastra?: MastraUnion;
+    runtimeContext: RuntimeContext;
+    writer?: ToolStream<any>;
+    tracingContext?: TracingContext;
+    suspend?: (suspendPayload: InferZodLikeSchema<TSuspendSchema>) => Promise<any>;
+    resumeData?: InferZodLikeSchema<TResumeSchema>;
+}
+export interface ToolAction<TSchemaIn extends ZodLikeSchema | undefined = undefined, TSchemaOut extends ZodLikeSchema | undefined = undefined, TSuspendSchema extends ZodLikeSchema = any, TResumeSchema extends ZodLikeSchema = any, TContext extends ToolExecutionContext<TSchemaIn, TSuspendSchema, TResumeSchema> = ToolExecutionContext<TSchemaIn, TSuspendSchema, TResumeSchema>> extends IAction<string, TSchemaIn, TSchemaOut, TContext, MastraToolInvocationOptions> {
+    suspendSchema?: TSuspendSchema;
+    resumeSchema?: TResumeSchema;
+    description: string;
+    execute?: (context: TContext, options?: MastraToolInvocationOptions) => Promise<TSchemaOut extends ZodLikeSchema ? InferZodLikeSchema<TSchemaOut> : unknown>;
+    mastra?: Mastra;
+    requireApproval?: boolean;
+    onInputStart?: (options: ToolCallOptions) => void | PromiseLike<void>;
+    onInputDelta?: (options: {
+        inputTextDelta: string;
+    } & ToolCallOptions) => void | PromiseLike<void>;
+    onInputAvailable?: (options: {
+        input: InferZodLikeSchema<TSchemaIn>;
+    } & ToolCallOptions) => void | PromiseLike<void>;
+}
+//# sourceMappingURL=types.d.ts.map

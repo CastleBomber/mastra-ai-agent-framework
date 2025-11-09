@@ -1,0 +1,148 @@
+import type { WritableStream } from 'stream/web';
+import type { CoreMessage } from 'ai';
+import { z } from 'zod';
+import type { MastraPrimitives } from './action/index.js';
+import type { ToolsInput } from './agent/index.js';
+import type { TracingContext, TracingPolicy } from './ai-tracing/index.js';
+import type { MastraLanguageModel } from './llm/model/shared.types.js';
+import type { IMastraLogger } from './logger/index.js';
+import type { Mastra } from './mastra/index.js';
+import type { AiMessageType, MastraMemory } from './memory/index.js';
+import type { RuntimeContext } from './runtime-context/index.js';
+import type { ChunkType } from './stream/types.js';
+import type { CoreTool, VercelToolV5 } from './tools/index.js';
+import type { ToolToConvert } from './tools/tool-builder/builder.js';
+export declare const delay: (ms: number) => Promise<unknown>;
+/**
+ * Deep merges two objects, recursively merging nested objects and arrays
+ */
+export declare function deepMerge<T extends object = object>(target: T, source: Partial<T>): T;
+export declare function generateEmptyFromSchema(schema: string): Record<string, any>;
+export interface TagMaskOptions {
+    /** Called when masking begins */
+    onStart?: () => void;
+    /** Called when masking ends */
+    onEnd?: () => void;
+    /** Called for each chunk that is masked */
+    onMask?: (chunk: string) => void;
+}
+/**
+ * Transforms a stream by masking content between XML tags.
+ * @param stream Input stream to transform
+ * @param tag Tag name to mask between (e.g. for <foo>...</foo>, use 'foo')
+ * @param options Optional configuration for masking behavior
+ */
+export declare function maskStreamTags(stream: AsyncIterable<string>, tag: string, options?: TagMaskOptions): AsyncIterable<string>;
+/**
+ * Resolve serialized zod output - This function takes the string output ot the `jsonSchemaToZod` function
+ * and instantiates the zod object correctly.
+ *
+ * @param schema - serialized zod object
+ * @returns resolved zod object
+ */
+export declare function resolveSerializedZodOutput(schema: string): z.ZodType;
+export interface ToolOptions {
+    name: string;
+    runId?: string;
+    threadId?: string;
+    resourceId?: string;
+    logger?: IMastraLogger;
+    description?: string;
+    mastra?: (Mastra & MastraPrimitives) | MastraPrimitives;
+    runtimeContext: RuntimeContext;
+    /** Build-time tracing context (fallback for Legacy methods that can't pass runtime context) */
+    tracingContext?: TracingContext;
+    tracingPolicy?: TracingPolicy;
+    memory?: MastraMemory;
+    agentName?: string;
+    model?: MastraLanguageModel;
+    writableStream?: WritableStream<ChunkType>;
+    requireApproval?: boolean;
+}
+/**
+ * Checks if a value is a Zod type
+ * @param value - The value to check
+ * @returns True if the value is a Zod type, false otherwise
+ */
+export declare function isZodType(value: unknown): value is z.ZodType;
+/**
+ * Ensures a tool has an ID and inputSchema by generating one if not present
+ * @param tool - The tool to ensure has an ID and inputSchema
+ * @returns The tool with an ID and inputSchema
+ */
+export declare function ensureToolProperties(tools: ToolsInput): ToolsInput;
+/**
+ * Converts a Vercel Tool or Mastra Tool into a CoreTool format
+ * @param originalTool - The tool to convert (either VercelTool or ToolAction)
+ * @param options - Tool options including Mastra-specific settings
+ * @param logType - Type of tool to log (tool or toolset)
+ * @returns A CoreTool that can be used by the system
+ */
+export declare function makeCoreTool(originalTool: ToolToConvert, options: ToolOptions, logType?: 'tool' | 'toolset' | 'client-tool'): CoreTool;
+export declare function makeCoreToolV5(originalTool: ToolToConvert, options: ToolOptions, logType?: 'tool' | 'toolset' | 'client-tool'): VercelToolV5;
+/**
+ * Creates a proxy for a Mastra instance to handle deprecated properties
+ * @param mastra - The Mastra instance to proxy
+ * @param logger - The logger to use for warnings
+ * @returns A proxy for the Mastra instance
+ */
+export declare function createMastraProxy({ mastra, logger }: {
+    mastra: Mastra;
+    logger: IMastraLogger;
+}): Mastra<Record<string, import("./agent").Agent<any, ToolsInput, Record<string, import("./eval").Metric>>>, Record<string, import("./workflows/legacy").LegacyWorkflow<import("./workflows/legacy").LegacyStep<string, any, any, import("./workflows/legacy").StepExecutionContext<any, import("./workflows/legacy").WorkflowContext<any, import("./workflows/legacy").LegacyStep<string, any, any, any>[], Record<string, any>>>>[], string, any, any>>, Record<string, import("./workflows").Workflow<any, any, any, any, any, any, any>>, Record<string, import("./vector").MastraVector<import("./vector/filter").VectorFilter>>, Record<string, import("./tts").MastraTTS>, IMastraLogger, Record<string, import("./mcp").MCPServerBase>, Record<string, import("./scores").MastraScorer<any, any, any, any>>>;
+export declare function checkEvalStorageFields(traceObject: any, logger?: IMastraLogger): boolean;
+export declare function isUiMessage(message: CoreMessage | AiMessageType): message is AiMessageType;
+export declare function isCoreMessage(message: CoreMessage | AiMessageType): message is CoreMessage;
+/** Represents a validated SQL identifier (e.g., table or column name). */
+type SqlIdentifier = string & {
+    __brand: 'SqlIdentifier';
+};
+/** Represents a validated dot-separated SQL field key. */
+type FieldKey = string & {
+    __brand: 'FieldKey';
+};
+/**
+ * Parses and returns a valid SQL identifier (such as a table or column name).
+ * The identifier must:
+ *   - Start with a letter (a-z, A-Z) or underscore (_)
+ *   - Contain only letters, numbers, or underscores
+ *   - Be at most 63 characters long
+ *
+ * @param name - The identifier string to parse.
+ * @param kind - Optional label for error messages (e.g., 'table name').
+ * @returns The validated identifier as a branded type.
+ * @throws {Error} If the identifier does not conform to SQL naming rules.
+ *
+ * @example
+ * const id = parseSqlIdentifier('my_table'); // Ok
+ * parseSqlIdentifier('123table'); // Throws error
+ */
+export declare function parseSqlIdentifier(name: string, kind?: string): SqlIdentifier;
+/**
+ * Parses and returns a valid dot-separated SQL field key (e.g., 'user.profile.name').
+ * Each segment must:
+ *   - Start with a letter (a-z, A-Z) or underscore (_)
+ *   - Contain only letters, numbers, or underscores
+ *   - Be at most 63 characters long
+ *
+ * @param key - The dot-separated field key string to parse.
+ * @returns The validated field key as a branded type.
+ * @throws {Error} If any segment of the key is invalid.
+ *
+ * @example
+ * const key = parseFieldKey('user_profile.name'); // Ok
+ * parseFieldKey('user..name'); // Throws error
+ * parseFieldKey('user.123name'); // Throws error
+ */
+export declare function parseFieldKey(key: string): FieldKey;
+/**
+ * Performs a fetch request with automatic retries using exponential backoff
+ * @param url The URL to fetch from
+ * @param options Standard fetch options
+ * @param maxRetries Maximum number of retry attempts
+ * @param validateResponse Optional function to validate the response beyond HTTP status
+ * @returns The fetch Response if successful
+ */
+export declare function fetchWithRetry(url: string, options?: RequestInit, maxRetries?: number): Promise<Response>;
+export {};
+//# sourceMappingURL=utils.d.ts.map

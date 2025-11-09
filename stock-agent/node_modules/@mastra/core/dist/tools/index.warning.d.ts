@@ -1,0 +1,8 @@
+import type { z } from 'zod';
+import { Tool as BaseTool } from './tool.js';
+import type { ToolAction, ToolExecutionContext } from './types.js';
+export * from './tool.js';
+export declare class Tool<TSchemaIn extends z.ZodSchema | undefined = undefined, TSchemaOut extends z.ZodSchema | undefined = undefined, TSuspendSchema extends z.ZodSchema = any, TResumeSchema extends z.ZodSchema = any, TContext extends ToolExecutionContext<TSchemaIn, TSuspendSchema, TResumeSchema> = ToolExecutionContext<TSchemaIn, TSuspendSchema, TResumeSchema>> extends BaseTool<TSchemaIn, TSchemaOut, TSuspendSchema, TResumeSchema, TContext> {
+    constructor(opts: ToolAction<TSchemaIn, TSchemaOut, TSuspendSchema, TResumeSchema, TContext>);
+}
+//# sourceMappingURL=index.warning.d.ts.map

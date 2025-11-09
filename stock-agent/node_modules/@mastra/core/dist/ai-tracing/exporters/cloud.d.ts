@@ -1,0 +1,30 @@
+import type { AITracingEvent } from '../types.js';
+import { BaseExporter } from './base.js';
+import type { BaseExporterConfig } from './base.js';
+export interface CloudExporterConfig extends BaseExporterConfig {
+    maxBatchSize?: number;
+    maxBatchWaitMs?: number;
+    maxRetries?: number;
+    accessToken?: string;
+    endpoint?: string;
+}
+export declare class CloudExporter extends BaseExporter {
+    name: string;
+    private config;
+    private buffer;
+    private flushTimer;
+    constructor(config?: CloudExporterConfig);
+    protected _exportEvent(event: AITracingEvent): Promise<void>;
+    private addToBuffer;
+    private formatSpan;
+    private shouldFlush;
+    private scheduleFlush;
+    private flush;
+    /**
+     * Uploads spans to cloud API using fetchWithRetry for all retry logic
+     */
+    private batchUpload;
+    private resetBuffer;
+    shutdown(): Promise<void>;
+}
+//# sourceMappingURL=cloud.d.ts.map

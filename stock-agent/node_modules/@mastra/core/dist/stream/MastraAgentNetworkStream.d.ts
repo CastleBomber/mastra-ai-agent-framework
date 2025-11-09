@@ -1,0 +1,22 @@
+import { ReadableStream } from 'stream/web';
+import type { Run } from '../workflows/index.js';
+import type { ChunkType } from './types.js';
+export declare class MastraAgentNetworkStream extends ReadableStream<ChunkType> {
+    #private;
+    constructor({ createStream, run, }: {
+        createStream: (writer: WritableStream<ChunkType>) => Promise<ReadableStream<any>> | ReadableStream<any>;
+        run: Run;
+    });
+    get status(): Promise<"success" | "failed" | "suspended">;
+    get result(): Promise<import("..").WorkflowResult<import("zod").ZodObject<any, import("zod").UnknownKeysParam, import("zod").ZodTypeAny, {
+        [x: string]: any;
+    }, {
+        [x: string]: any;
+    }>, import("zod").ZodType<any, import("zod").ZodTypeDef, any>, import("zod").ZodType<any, import("zod").ZodTypeDef, any>, import("..").Step<string, any, any, any, any, any, any>[]> | undefined>;
+    get usage(): Promise<{
+        inputTokens: number;
+        outputTokens: number;
+        totalTokens: number;
+    }>;
+}
+//# sourceMappingURL=MastraAgentNetworkStream.d.ts.map

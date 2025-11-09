@@ -1,0 +1,67 @@
+'use strict';
+
+var chunk6VOPKVYH_cjs = require('./chunk-6VOPKVYH.cjs');
+var TTLCache = require('@isaacs/ttlcache');
+
+function _interopDefault (e) { return e && e.__esModule ? e : { default: e }; }
+
+var TTLCache__default = /*#__PURE__*/_interopDefault(TTLCache);
+
+// src/cache/base.ts
+var MastraServerCache = class extends chunk6VOPKVYH_cjs.MastraBase {
+  constructor({ name }) {
+    super({
+      component: "SERVER_CACHE",
+      name
+    });
+  }
+};
+var InMemoryServerCache = class extends MastraServerCache {
+  cache = new TTLCache__default.default({
+    max: 1e3,
+    ttl: 1e3 * 60 * 5
+  });
+  constructor() {
+    super({ name: "InMemoryServerCache" });
+  }
+  async get(key) {
+    return this.cache.get(key);
+  }
+  async set(key, value) {
+    this.cache.set(key, value);
+  }
+  async listLength(key) {
+    const list = this.cache.get(key);
+    if (!Array.isArray(list)) {
+      throw new Error(`${key} is not an array`);
+    }
+    return list.length;
+  }
+  async listPush(key, value) {
+    const list = this.cache.get(key);
+    if (Array.isArray(list)) {
+      list.push(value);
+    } else {
+      this.cache.set(key, [value]);
+    }
+  }
+  async listFromTo(key, from, to = -1) {
+    const list = this.cache.get(key);
+    if (Array.isArray(list)) {
+      const endIndex = to === -1 ? void 0 : to + 1;
+      return list.slice(from, endIndex);
+    }
+    return [];
+  }
+  async delete(key) {
+    this.cache.delete(key);
+  }
+  async clear() {
+    this.cache.clear();
+  }
+};
+
+exports.InMemoryServerCache = InMemoryServerCache;
+exports.MastraServerCache = MastraServerCache;
+//# sourceMappingURL=chunk-B7V6NYWH.cjs.map
+//# sourceMappingURL=chunk-B7V6NYWH.cjs.map
