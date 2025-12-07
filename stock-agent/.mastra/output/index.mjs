@@ -3,8 +3,15 @@ import { registerHook, AvailableHooks } from '@mastra/core/hooks';
 import { TABLE_EVALS } from '@mastra/core/storage';
 import { scoreTraces, scoreTracesWorkflow } from '@mastra/core/scores/scoreTraces';
 import { generateEmptyFromSchema, checkEvalStorageFields } from '@mastra/core/utils';
-import { Agent, Mastra } from '@mastra/core';
-import { stockPrices } from './tools/76e21876-a1b7-4afa-9fb4-da7c90bd0811.mjs';
+import { Mastra } from '@mastra/core';
+import { Agent, tryGenerateWithJsonFallback, tryStreamWithJsonFallback, MessageList, convertMessages } from '@mastra/core/agent';
+import { Memory as Memory$1 } from '@mastra/memory';
+import { LibSQLStore } from '@mastra/libsql';
+import { stockPrices } from './tools/0828fa41-04b6-4643-826c-c50085288691.mjs';
+import { stockNews } from './tools/19344989-0c84-4c16-801b-6398d23f383e.mjs';
+import { stockHistorical } from './tools/682b8b8f-c3e2-4ccf-8bba-aecfa6b685bf.mjs';
+import { createWorkflow, createStep } from '@mastra/core/workflows';
+import { z, ZodObject, ZodFirstPartyTypeKind } from 'zod';
 import crypto$1, { randomUUID } from 'crypto';
 import { readdir, readFile, mkdtemp, rm, writeFile, mkdir, copyFile, stat } from 'fs/promises';
 import * as https from 'https';
@@ -17,8 +24,6 @@ import { join, resolve as resolve$2, dirname, extname, basename, isAbsolute, rel
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Telemetry } from '@mastra/core/telemetry';
 import { createTool, isVercelTool, Tool } from '@mastra/core/tools';
-import { Agent as Agent$1, tryGenerateWithJsonFallback, tryStreamWithJsonFallback, MessageList, convertMessages } from '@mastra/core/agent';
-import { z, ZodObject, ZodFirstPartyTypeKind } from 'zod';
 import { MastraError, ErrorCategory, ErrorDomain, getErrorFromUnknown } from '@mastra/core/error';
 import { ModelRouterLanguageModel, PROVIDER_REGISTRY, getProviderConfig } from '@mastra/core/llm';
 import { ChunkFrom } from '@mastra/core/stream';
@@ -36,27 +41,78 @@ import { ZodFirstPartyTypeKind as ZodFirstPartyTypeKind$1 } from 'zod/v3';
 import { spawn as spawn$1, execFile as execFile$1, exec as exec$1 } from 'child_process';
 import { createRequire } from 'module';
 import { tmpdir } from 'os';
-import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { tools } from './tools.mjs';
+import 'axios';
 
+const mem = new Memory$1({
+  options: { lastMessages: 50 },
+  storage: new LibSQLStore({ url: "file:./mastra.db" })
+});
 const stockAgent = new Agent({
   name: "Stock Agent",
-  instructions: `You are a helpful assistant that provides current stock prices. 
-    When asked about a stock, 
-    use the stock price tool to fetch the stock price.`,
-  model: {
-    provider: "OPEN_AI",
-    name: "gpt-4o"
-  },
+  model: "openai/gpt-4o-mini",
+  memory: mem,
+  instructions: `
+    You are a helpful assistant.
+    When relevant, use the remembered information to give more personalized and consistent answers.
+    Do not invent memory that was not provided.
+`,
   tools: {
-    stockPrices: stockPrices
+    stockPrices: stockPrices,
+    stockNews,
+    stockHistorical
   }
 });
+
+const stepGetPrice = createStep({
+  id: "get-price",
+  inputSchema: z.object({ symbol: z.string() }),
+  outputSchema: z.object({ currentPrice: z.number() }),
+  execute: async ({ inputData }) => {
+    const res = await stockPrices.execute({ context: { symbol: inputData.symbol } });
+    return { currentPrice: res.currentPrice };
+  }
+});
+const stepGetLow = createStep({
+  id: "get-low",
+  inputSchema: z.object({ symbol: z.string() }),
+  outputSchema: z.object({ lowest: z.number(), lowestDate: z.string() }),
+  execute: async ({ inputData }) => {
+    const res = await stockHistorical.execute({ context: { symbol: inputData.symbol } });
+    return { lowest: res.lowest, lowestDate: res.date };
+  }
+});
+const stepGetNews = createStep({
+  id: "get-news",
+  inputSchema: z.object({ symbol: z.string() }),
+  outputSchema: z.object({ headlines: z.array(z.string()) }),
+  execute: async ({ inputData }) => {
+    const res = await stockNews.execute({ context: { symbol: inputData.symbol } });
+    return { headlines: res.headlines };
+  }
+});
+const stockWorkflow = createWorkflow({
+  id: "stock-analyze-workflow",
+  inputSchema: z.object({ symbol: z.string() }),
+  outputSchema: z.object({
+    symbol: z.string(),
+    currentPrice: z.number(),
+    lowest: z.number(),
+    lowestDate: z.string(),
+    headlines: z.array(z.string())
+  })
+}).then(stepGetPrice).then(stepGetLow).then(stepGetNews).commit();
 
 const mastra = new Mastra({
   agents: {
     stockAgent
-  }
+  },
+  workflows: {
+    stockWorkflow
+  },
+  storage: new LibSQLStore({
+    url: "file:./mastra.db"
+  })
 });
 
 // src/utils/mime.ts
@@ -24434,7 +24490,7 @@ var ToolSummaryProcessor = class extends MemoryProcessor {
   summaryCache = /* @__PURE__ */ new Map();
   constructor({ summaryModel }) {
     super({ name: "ToolSummaryProcessor" });
-    this.summaryAgent = new Agent$1({
+    this.summaryAgent = new Agent({
       name: "ToolSummaryAgent",
       description: "A summary agent that summarizes tool calls and results",
       instructions: "You are a summary agent that summarizes tool calls and results",
@@ -24520,7 +24576,7 @@ var ToolSummaryProcessor = class extends MemoryProcessor {
     return messages;
   }
 };
-var AgentBuilder = class extends Agent$1 {
+var AgentBuilder = class extends Agent {
   builderConfig;
   /**
    * Constructor for AgentBuilder
@@ -24758,7 +24814,7 @@ var discoverUnitsStep = createStep({
     console.info("targetPath", targetPath);
     const model = await resolveModel({ runtimeContext, projectPath: targetPath, defaultModel: openai("gpt-4.1") });
     try {
-      const agent = new Agent$1({
+      const agent = new Agent({
         model,
         instructions: `You are an expert at analyzing Mastra projects.
 
@@ -25670,7 +25726,7 @@ var validationAndFixStep = createStep({
     try {
       const model = await resolveModel({ runtimeContext, projectPath: targetPath, defaultModel: openai("gpt-4.1") });
       const allTools = await AgentBuilderDefaults.getToolsForMode(targetPath, "template");
-      const validationAgent = new Agent$1({
+      const validationAgent = new Agent({
         name: "code-validator-fixer",
         description: "Specialized agent for validating and fixing template integration issues",
         instructions: `You are a code validation and fixing specialist. Your job is to:
@@ -26394,7 +26450,7 @@ var planningIterationStep = createStep({
     }
     try {
       const model = await resolveModel({ runtimeContext });
-      const planningAgent = new Agent$1({
+      const planningAgent = new Agent({
         model,
         instructions: taskPlanningPrompts.planningAgent.instructions({
           storedQAPairs
@@ -27118,7 +27174,7 @@ var workflowResearchStep = createStep({
     console.info("Starting workflow research...");
     try {
       const model = await resolveModel({ runtimeContext });
-      const researchAgent = new Agent$1({
+      const researchAgent = new Agent({
         model,
         instructions: workflowBuilderPrompts.researchAgent.instructions,
         name: "Workflow Research Agent"
@@ -28280,8 +28336,8 @@ async function streamNetworkHandler$1({
     const streamResult = agent.network(messages, {
       ...rest,
       memory: {
-        thread: rest.thread ?? "",
-        resource: rest.resourceId ?? "",
+        thread: rest.memory?.thread ?? "",
+        resource: rest.memory?.resource ?? "",
         options: rest.memory?.options ?? {}
       },
       runtimeContext: finalRuntimeContext
@@ -31324,6 +31380,11 @@ function errorHandler(err, c2, isDev) {
   return c2.json({ error: "Internal Server Error" }, 500);
 }
 
+// src/server/handlers/health.ts
+async function healthHandler(c2) {
+  return c2.json({ success: true }, 200);
+}
+
 // src/server/handlers/root.ts
 async function rootHandler(c2) {
   const baseUrl = new URL(c2.req.url).origin;
@@ -32390,7 +32451,7 @@ async function generateSystemPromptHandler(c2) {
             Remember: A good system prompt should be specific enough to guide behavior but flexible enough to handle edge cases. 
             Focus on creating prompts that are clear, actionable, and aligned with the intended use case.
         `;
-    const systemPromptAgent = new Agent$1({
+    const systemPromptAgent = new Agent({
       name: "system-prompt-enhancer",
       instructions: ENHANCE_SYSTEM_PROMPT_INSTRUCTIONS,
       model: agent.llm?.getModel()
@@ -41818,6 +41879,19 @@ async function createHonoServer(mastra, options = {
     };
     app.use("*", timeout(server?.timeout ?? 3 * 60 * 1e3), cors(corsConfig));
   }
+  app.get(
+    "/health",
+    w({
+      description: "Health check endpoint",
+      tags: ["system"],
+      responses: {
+        200: {
+          description: "Service is healthy"
+        }
+      }
+    }),
+    healthHandler
+  );
   app.use("*", authenticationMiddleware);
   app.use("*", authorizationMiddleware);
   const bodyLimitOptions = {

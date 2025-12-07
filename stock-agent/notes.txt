@@ -1,0 +1,3 @@
+# Starts server and project on localhost:4112 or 4111 
+# (run from stock-agent/, the project's root directory)
+npx mastra dev --dir src

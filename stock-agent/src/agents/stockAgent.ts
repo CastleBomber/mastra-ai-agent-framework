@@ -1,18 +1,30 @@
-import { Agent } from "@mastra/core";
+import { Agent } from "@mastra/core/agent";
+import { Memory } from "@mastra/memory";
+import { LibSQLStore } from "@mastra/libsql";
 import * as tools from "../tools/stockPrices";
+import { stockNews } from "../tools/stockNews";
+import { stockHistorical } from "../tools/stockHistorical";
 
-export const stockAgent = new Agent<typeof tools>({
-  name: "Stock Agent",
-  instructions:
-    `You are a helpful assistant that provides current stock prices. 
-    When asked about a stock, 
-    use the stock price tool to fetch the stock price.`,
-  model: {
-    provider: "OPEN_AI",
-    name: "gpt-4o",
-  },
-  tools: {
-    stockPrices: tools.stockPrices,
-  },
+// --- Memory Setup ---
+const mem = new Memory({
+  options: { lastMessages: 50 },
+  storage: new LibSQLStore({ url: "file:./mastra.db" }),
 });
 
+export const stockAgent = new Agent({
+  name: "Stock Agent",
+  model: "openai/gpt-4o-mini",
+  memory: mem,
+
+  instructions: `
+    You are a helpful assistant.
+    When relevant, use the remembered information to give more personalized and consistent answers.
+    Do not invent memory that was not provided.
+`,
+
+  tools: {
+    stockPrices: tools.stockPrices,
+    stockNews,
+    stockHistorical
+  },
+});
