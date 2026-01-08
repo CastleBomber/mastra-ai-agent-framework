@@ -3,7 +3,7 @@ import { Memory } from "@mastra/memory";
 import { LibSQLStore } from "@mastra/libsql";
 import * as tools from "../tools/stockPrices";
 import { stockNews } from "../tools/stockNews";
-import { stockHistorical } from "../tools/stockHistorical";
+import { stockPricesHistorical } from "../tools/stockPricesHistorical";
 
 // --- Memory Setup ---
 const mem = new Memory({
@@ -25,6 +25,6 @@ export const stockAgent = new Agent({
   tools: {
     stockPrices: tools.stockPrices,
     stockNews,
-    stockHistorical
+    stockPricesHistorical
   },
 });

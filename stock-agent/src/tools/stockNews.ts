@@ -1,33 +1,34 @@
-import { createTool } from "@mastra/core/tools";
-import { z } from "zod";
-import axios from "axios";
+import { Tool } from "@mastra/core";
+import fetch from "node-fetch";
 
-export const stockNews = createTool({
-  id: "Get Stock News",
-  inputSchema: z.object({
-    symbol: z.string(),
-  }),
-  description: "Fetches real, live financial news for a stock symbol.",
-  execute: async ({ context: { symbol } }) => {
-    const apiKey = process.env.FINNHUB_KEY;
+export const stockNews = new Tool({
+  id: "stock-news",
+  inputSchema: {
+    type: "object",
+    properties: { symbol: { type: "string" } },
+    required: ["symbol"],
+  },
 
-    const { data } = await axios.get(
-      `https://finnhub.io/api/v1/company-news?symbol=${symbol}&from=2024-01-01&to=2024-12-31&token=${apiKey}`,
-      {
-        params: {
-          symbol,
-          from: "2024-01-01",
-          to: "2024-12-31",
-          token: apiKey,
-        },
-      },
-    );
+  execute: async ({ context }) => {
+    const { symbol } = context;
 
-    const headlines = data.slice(0, 3).map(item => item.headline);
+    const today = new Date();
+    const from = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0];
+    const to = today.toISOString().split("T")[0];
 
-    return { 
-      symbol, 
-      headlines,
+    const url = `https://finnhub.io/api/v1/company-news?symbol=${symbol}&from=${from}&to=${to}&token=${process.env.FINNHUB_KEY}`;
+
+    const res = await fetch(url).then(r => r.json());
+
+    if (!Array.isArray(res)) return { headlines: [] };
+
+    return {
+      headlines: res.slice(0, 5).map(a => ({
+        title: a.headline,
+        date: new Date(a.datetime * 1000).toISOString().split("T")[0],
+      })),
     };
   },
 });

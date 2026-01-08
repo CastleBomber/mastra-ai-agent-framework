@@ -1,7 +1,7 @@
 import { createWorkflow, createStep } from "@mastra/core/workflows";
 import { z } from "zod";
 import { stockPrices } from "../tools/stockPrices";
-import { stockHistorical } from "../tools/stockHistorical";
+import { stockPricesHistorical } from "../tools/stockPricesHistorical";
 import { stockNews } from "../tools/stockNews";
 
 // Step 1: get current price
@@ -21,7 +21,7 @@ const stepGetLow = createStep({
     inputSchema: z.object({ symbol: z.string() }),
     outputSchema: z.object({ lowest: z.number(), lowestDate: z.string() }),
     execute: async ({ inputData }) => {
-        const res = await stockHistorical.execute({ context: { symbol: inputData.symbol } });
+        const res = await stockPricesHistorical.execute({ context: { symbol: inputData.symbol } });
         return { lowest: res.lowest, lowestDate: res.date };
     },
 });
