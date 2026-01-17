@@ -1,32 +1,52 @@
-import { Tool } from "@mastra/core";
+import { createTool } from "@mastra/core/tools";
+import { z } from "zod";
 
-export const stockPricesHistorical = new Tool({
-  id: "stock-prices-historical",
-  inputSchema: {
-    type: "object",
-    properties: { symbol: { type: "string" } },
-    required: ["symbol"],
-  },
+/**
+ * stockNews.ts
+ * ------------
+ * Tool: Fetch recent stock-related news
+ *
+ * Retrieves recent company-specific news (headline + date)
+ * for a given stock symbol using a rolling 14-day window.
+ *
+ * Data source:
+ *   Finnhub Company News API
+ */
+export const stockNews = createTool({
+  id: "stock-news",
+  description: "Fetches recent company news for a stock symbol",
+
+  inputSchema: z.object({
+    symbol: z.string(),
+  }),
+
+  outputSchema: z.object({
+    headlines: z.array(
+      z.object({
+        title: z.string(),
+        date: z.string(),
+      })
+    ),
+  }),
+
   execute: async ({ context }) => {
     const { symbol } = context;
 
-    const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${process.env.ALPHA_KEY}`;
+    const from = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0];
+    const to = new Date().toISOString().split("T")[0];
+
+    const url = `https://finnhub.io/api/v1/company-news?symbol=${symbol}&from=${from}&to=${to}&token=${process.env.FINNHUB_KEY}`;
     const res = await fetch(url).then(r => r.json());
 
-    const series = res["Time Series (Daily)"];
-    if (!series) return { lowest: null, date: null };
+    if (!Array.isArray(res)) return { headlines: [] };
 
-    let lowest = Infinity;
-    let lowestDate: string | null = null;
-
-    for (const [date, data] of Object.entries(series)) {
-      const low = parseFloat((data as any)["3. low"]);
-      if (low < lowest) {
-        lowest = low;
-        lowestDate = date;
-      }
-    }
-
-    return { lowest, date: lowestDate };
+    return {
+      headlines: res.slice(0, 5).map(a => ({
+        title: a.headline,
+        date: new Date(a.datetime * 1000).toISOString().split("T")[0],
+      })),
+    };
   },
 });

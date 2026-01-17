@@ -1,9 +1,30 @@
+/**
+ * stockAgent.ts
+ * -------------
+ * Agent: Stock Analysis Assistant
+ *
+ * Primary conversational agent responsible for answering
+ * stock-related questions using real market data.
+ *
+ * Capabilities:
+ *   - Fetch current stock prices
+ *   - Analyze historical price data (ex: lowest price)
+ *   - Retrieve recent company news
+ *
+ * Memory:
+ *   - Persists recent conversation context using LibSQL
+ *   - Enables continuity across user interactions
+ *
+ * Designed to work alongside workflows and tools to provide
+ * accurate, data-driven financial responses.
+ */
+
 import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { LibSQLStore } from "@mastra/libsql";
-import * as tools from "../tools/stockPrices";
+import * as stockPricesCurrentTools from "../tools/stockPricesCurrent";
 import { stockNews } from "../tools/stockNews";
-import { stockPricesHistorical } from "../tools/stockPricesHistorical";
+import * as stockPricesHistoricalTools from "../tools/stockPricesHistorical";
 
 // --- Memory Setup ---
 const mem = new Memory({
@@ -23,8 +44,8 @@ export const stockAgent = new Agent({
 `,
 
   tools: {
-    stockPrices: tools.stockPrices,
+    stockPricesCurrent: stockPricesCurrentTools.stockPricesCurrent,
+    stockPricesHistorical: stockPricesHistoricalTools.stockPricesHistorical,
     stockNews,
-    stockPricesHistorical
   },
 });

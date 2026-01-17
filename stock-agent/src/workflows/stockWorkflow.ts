@@ -1,6 +1,6 @@
 import { createWorkflow, createStep } from "@mastra/core/workflows";
 import { z } from "zod";
-import { stockPrices } from "../tools/stockPrices";
+import { stockPricesCurrent } from "../tools/stockPricesCurrent";
 import { stockPricesHistorical } from "../tools/stockPricesHistorical";
 import { stockNews } from "../tools/stockNews";
 
@@ -9,8 +9,12 @@ const stepGetPrice = createStep({
     id: "get-price",
     inputSchema: z.object({ symbol: z.string() }),
     outputSchema: z.object({ currentPrice: z.number() }),
+
     execute: async ({ inputData }) => {
-        const res = await stockPrices.execute({ context: { symbol: inputData.symbol } });
+        const res = await stockPricesCurrent.execute({ 
+            symbol: inputData.symbol 
+        });
+
         return { currentPrice: res.currentPrice };
     },
 });
@@ -19,10 +23,19 @@ const stepGetPrice = createStep({
 const stepGetLow = createStep({
     id: "get-low",
     inputSchema: z.object({ symbol: z.string() }),
-    outputSchema: z.object({ lowest: z.number(), lowestDate: z.string() }),
+    outputSchema: z.object({ 
+        lowest: z.number(), 
+        lowestDate: z.string(), 
+    }),
+    
     execute: async ({ inputData }) => {
-        const res = await stockPricesHistorical.execute({ context: { symbol: inputData.symbol } });
-        return { lowest: res.lowest, lowestDate: res.date };
+        const res = await stockPricesHistorical.execute({ 
+            symbol: inputData.symbol 
+        });
+
+        return { 
+            lowest: res.lowest, 
+            lowestDate: res.date };
     },
 });
 
@@ -30,9 +43,20 @@ const stepGetLow = createStep({
 const stepGetNews = createStep({
     id: "get-news",
     inputSchema: z.object({ symbol: z.string() }),
-    outputSchema: z.object({ headlines: z.array(z.string()) }),
+    outputSchema: z.object({ 
+        headlines: z.array(
+            z.object({
+                title: z.string(),
+                date: z.string(),
+            })
+        ),
+     }),
+
     execute: async ({ inputData }) => {
-        const res = await stockNews.execute({ context: { symbol: inputData.symbol } });
+        const res = await stockNews.execute({ 
+            symbol: inputData.symbol,
+        });
+
         return { headlines: res.headlines };
     },
 });
@@ -43,10 +67,15 @@ export const stockWorkflow = createWorkflow({
     inputSchema: z.object({ symbol: z.string() }),
     outputSchema: z.object({
         symbol: z.string(),
-        currentPrice: z.number(),
+        currentPrice: z.string(),
         lowest: z.number(),
         lowestDate: z.string(),
-        headlines: z.array(z.string())
+        headlines: z.array(
+            z.object({
+                title: z.string(),
+                date: z.string(),
+            })
+        ),
     }),
 })
     .then(stepGetPrice)

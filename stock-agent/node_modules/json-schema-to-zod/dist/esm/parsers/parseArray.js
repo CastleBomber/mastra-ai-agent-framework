@@ -20,5 +20,12 @@ export const parseArray = (schema, refs) => {
         ", ",
         ")",
     ]);
+    if (schema.uniqueItems === true) {
+        r += withMessage(schema, "uniqueItems", () => [
+            ".unique(",
+            "",
+            ")",
+        ]);
+    }
     return r;
 };
