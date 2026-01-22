@@ -1,4 +1,4 @@
-import { Tool, Mastra } from '@mastra/core';
+import { Mastra } from '@mastra/core';
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/libsql';
@@ -36,9 +36,10 @@ const stockPricesCurrent = createTool({
   }
 });
 
-const stockNews = new Tool({
+const fmt = (d) => d.toISOString().split("T")[0];
+const stockNews = createTool({
   id: "stock-news",
-  description: "Fetches recent company news for a stock symbol",
+  description: "Fetches recent company news for a stock symbol (14-day with 90-day fallback",
   inputSchema: z.object({
     symbol: z.string()
   }),
@@ -50,26 +51,40 @@ const stockNews = new Tool({
       })
     )
   }),
-  execute: async ({ symbol }) => {
-    const from = new Date(Date.now() - 14 * 24 * 60 * 60 * 1e3).toISOString().split("T")[0];
-    const to = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
-    const url = `https://finnhub.io/api/v1/company-news?symbol=${symbol}&from=${from}&to=${to}&token=${process.env.FINNHUB_KEY}`;
-    const res = await fetch(url).then((r) => r.json());
-    if (!Array.isArray(res)) return {
-      headlines: []
+  execute: async ({ context }) => {
+    const { symbol } = context;
+    const to = fmt(/* @__PURE__ */ new Date());
+    const from14 = fmt(new Date(Date.now() - 14 * 24 * 60 * 60 * 1e3));
+    const from90 = fmt(new Date(Date.now() - 90 * 24 * 60 * 60 * 1e3));
+    const fetchNews = async (from) => {
+      const url = `https://finnhub.io/api/v1/company-news?symbol=${symbol}&from=${from}&to=${to}&token=${process.env.FINNHUB_KEY}`;
+      const res = await fetch(url).then((r) => r.json());
+      return Array.isArray(res) ? res : [];
     };
-    return {
-      headlines: res.slice(0, 5).map((a) => ({
-        title: a.headline,
-        date: new Date(a.datetime * 1e3).toISOString().split("T")[0]
-      }))
-    };
+    let articles = await fetchNews(from14);
+    let note;
+    if (articles.length === 0) {
+      articles = await fetchNews(from90);
+      note = "No news found in the last 14 days; expanded search window to 90 days.";
+    }
+    if (articles.length === 0) {
+      return {
+        headlines: [],
+        note: "No company news returned for this symbol in the last 90 days."
+      };
+    }
+    const headlines = articles.sort((a, b) => (b.datetime ?? 0) - (a.datetime ?? 0)).slice(0, 5).map((a) => ({
+      title: a.headline,
+      date: new Date(a.datetime * 1e3).toISOString().split("T")[0]
+    }));
+    return note ? { headlines, note } : { headlines };
   }
 });
 
-const stockPricesHistorical = new Tool({
+const stockPricesHistorical = createTool({
   id: "stock-prices-historical",
-  // Tool input: stock ticker symbol (ex: SPY)
+  description: "Fetches historical daily price data for a stock and finds the lowest trading price",
+  // Tool input: stock ticker symbol (ex: GOLD)
   inputSchema: z.object({
     symbol: z.string()
   }),
@@ -77,12 +92,13 @@ const stockPricesHistorical = new Tool({
     lowest: z.number(),
     date: z.string()
   }),
-  execute: async ({ symbol }) => {
+  execute: async ({ context }) => {
+    const { symbol } = context;
     const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${process.env.ALPHA_KEY}`;
     const res = await fetch(url).then((r) => r.json());
     const series = res["Time Series (Daily)"];
     if (!series) {
-      throw new Error(`No historical ddata returned for ${symbol}`);
+      throw new Error(`No historical data returned for ${symbol}`);
     }
     let lowest = Infinity;
     let lowestDate = "";

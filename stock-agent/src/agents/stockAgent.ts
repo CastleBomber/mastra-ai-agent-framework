@@ -39,8 +39,14 @@ export const stockAgent = new Agent({
 
   instructions: `
     You are a helpful assistant.
+
     When relevant, use the remembered information to give more personalized and consistent answers.
     Do not invent memory that was not provided.
+
+    When using stockNews:
+    - Present headlines with title, date, and URL only.
+    - Do NOT include summaries unless the user explicitly asks for a summary, explanation, or paragraph.
+    - If the user asks for more detail about a specific article, you may then use the stored summary.
 `,
 
   tools: {

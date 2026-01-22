@@ -7,9 +7,9 @@ import { Mastra } from '@mastra/core';
 import { Agent, tryGenerateWithJsonFallback, tryStreamWithJsonFallback, MessageList, convertMessages } from '@mastra/core/agent';
 import { Memory as Memory$1 } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/libsql';
-import { stockPricesCurrent } from './tools/0c00a18a-9576-436a-a785-12be86f3a454.mjs';
-import { stockNews } from './tools/08383cff-e668-4be8-a4f8-a5fc4b2ae1ba.mjs';
-import { stockPricesHistorical } from './tools/8298f029-d46a-49de-abc0-b272b733cd1a.mjs';
+import { stockPricesCurrent } from './tools/4ebddf66-a3b1-4ab9-9bcf-e5014477354f.mjs';
+import { stockNews } from './tools/278efff1-039f-47ae-b2ae-9b02d919ce10.mjs';
+import { stockPricesHistorical } from './tools/57e3a249-47cc-4c41-a6fd-1245641f3192.mjs';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { z, ZodObject, ZodFirstPartyTypeKind } from 'zod';
 import crypto$1, { randomUUID } from 'crypto';
@@ -53,8 +53,14 @@ const stockAgent = new Agent({
   memory: mem,
   instructions: `
     You are a helpful assistant.
+
     When relevant, use the remembered information to give more personalized and consistent answers.
     Do not invent memory that was not provided.
+
+    When using stockNews:
+    - Present headlines with title, date, and URL only.
+    - Do NOT include summaries unless the user explicitly asks for a summary, explanation, or paragraph.
+    - If the user asks for more detail about a specific article, you may then use the stored summary.
 `,
   tools: {
     stockPricesCurrent: stockPricesCurrent,
