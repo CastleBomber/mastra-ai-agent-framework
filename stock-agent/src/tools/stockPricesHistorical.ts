@@ -3,67 +3,97 @@
  * ------------------------
  * Tool: Analyze historical stock prices
  *
- * Fetches historical daily price data for a given stock symbol and
- * computes the lowest trading price along with the date it occurred.
+ * Fetches historical price data for a given stock symbol and computes: 
+ * - the lowest trading price ever + date
+ * - the highest trading price ever + date
  *
  * Answers questions like:
  *   - "What is the lowest price SPY has ever traded at?"
- *   - "What was GOLD's historical low?"
+ *   - "What was GOLD's historical high?"
  *
  * Data source:
  *   Alpha Vantage – Daily Time Series API
  *
  * Notes:
- *   - Currently calculates ONLY the lowest price
- *   - Designed to be extended with highest price, averages, indicators, etc.
+ *   - Designed to be extended with averages, indicators, etc.
  */
 
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
-// Tool that fetches historical daily prices and computes the lowest trading price
 export const stockPricesHistorical = createTool({
     id: "stock-prices-historical",
-    description: "Fetches historical daily price data for a stock and finds the lowest trading price",
+    description:
+        "Fetches historical stock price data and returns the all-time lowest and highest prices with dates",
 
     // Tool input: stock ticker symbol (ex: GOLD)
-    inputSchema: z.object( {
+    inputSchema: z.object({
         symbol: z.string()
     }),
 
     outputSchema: z.object({
+        symbol: z.string(),
         lowest: z.number(),
-        date: z.string(),
+        lowestDate: z.string(),
+        highest: z.number(),
+        highestDate: z.string(),
     }),
 
     execute: async ({ context }) => {
         const { symbol } = context;
 
         // Call Alpha Vantage daily time series API
-        const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${process.env.ALPHA_KEY}`;
-        const res = await fetch(url).then(r => r.json());
+        const url =
+            `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY` +
+            `&symbol=${encodeURIComponent(symbol)}` +
+            `&outputsize=full` +
+            `&apikey=${process.env.ALPHA_KEY}`;
+
+        const res = await fetch(url).then((r) => r.json());
+
+        // AlphaVantage error cases
+        if (res?.["Error Message"]) {
+            throw new Error(`Alpha Vantage error for ${symbol}: ${res["Error Message"]}`);
+        }
+        if (res?.["Note"]) {
+            // rate limit message
+            throw new Error(`Alpha Vantage rate limit hit: ${res["Note"]}`);
+        }
 
         // Daily price series keyed by date
         const series = res["Time Series (Daily)"];
+        console.log("days returned:", Object.keys(series).length);
+
         if (!series) {
             throw new Error(`No historical data returned for ${symbol}`);
         }
 
-        let lowest = Infinity;
+        let lowest = Number.POSITIVE_INFINITY;
         let lowestDate = "";
+        let highest = Number.NEGATIVE_INFINITY;
+        let highestDate = "";
 
         // Iterate through all days to find lowest price
         for (const [date, data] of Object.entries(series)) {
             const low = parseFloat((data as any)["3. low"]);
-            if (low < lowest) {
-                lowest = low;
-                lowestDate = date;
-            }
+            const high = parseFloat((data as any)["2. high"]);
+
+            if (!Number.isFinite(low) || !Number.isFinite(high)) continue;
+
+            if (low < lowest) { lowest = low; lowestDate = date; }
+            if (high > highest) { highest = high; highestDate = date; }
+        }
+
+        if (!Number.isFinite(lowest) || !Number.isFinite(highest)) {
+            throw new Error(`Could not compute low/high for ${symbol}`)
         }
 
         return {
+            symbol,
             lowest,
-            date: lowestDate
+            lowestDate,
+            highest,
+            highestDate,
         };
     },
 });

@@ -1,7 +1,21 @@
+/**
+ * stockPricesCurrent.ts
+ * ---------------------
+ * Tool: Fetch current stock price
+ *
+ * Retrieves the most recent daily closing price for a given stock symbol.
+ * 
+ * Answers questions like:
+ *   - "What is the current price of SPY?"
+ *   - "How much is GOLD trading at?"
+ *
+ * Data source:
+ *   mastra-stock-data.vercel.app (aggregated market data)
+ */
+
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
-// Fetches the current stock price (last close)
 const getStockPrice = async (symbol: string) => {
   const r = await fetch(
     `https://mastra-stock-data.vercel.app/api/stock-data?symbol=${symbol}`,

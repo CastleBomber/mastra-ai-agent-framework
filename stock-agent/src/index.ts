@@ -21,7 +21,7 @@
  *   - ChatGPT
  */
 
-
+import "dotenv/config";
 import { Mastra } from "@mastra/core";
 import { stockAgent } from "./agents/stockAgent";
 import { stockWorkflow } from "./workflows/stockWorkflow"

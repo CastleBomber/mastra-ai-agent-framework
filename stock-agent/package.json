@@ -15,6 +15,7 @@
     "@mastra/libsql": "^0.16.3",
     "@mastra/memory": "^0.15.12",
     "axios": "^1.13.2",
+    "dotenv": "^17.2.3",
     "mastra": "^0.18.5",
     "zod": "^3.25.76"
   }

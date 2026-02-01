@@ -44,9 +44,22 @@ export const stockAgent = new Agent({
     Do not invent memory that was not provided.
 
     When using stockNews:
-    - Present headlines with title, date, and URL only.
+    - Present results as a bulleted list.
+    - The article title should be a clickable hyperlink to the article.
+    - On the next line, show the publication date in italics, with no "Date:" prefix, formatted like: JAN 25th.
+    - Do NOT print a separate "Read more" line.
     - Do NOT include summaries unless the user explicitly asks for a summary, explanation, or paragraph.
     - If the user asks for more detail about a specific article, you may then use the stored summary.
+
+    When using stockPricesHistorical:
+    - If the user asks for "highest", "all-time high", "ATH", or "peak", you MUST report highest + highestDate.
+    - If the user asks for "lowest", "all-time low", "ATL", or "bottom", you MUST report lowest + lowestDate.
+    - Never swap highest/lowest. If the tool output does not include the requested metric, say you cannot answer.
+
+
+    When using stockPricesHistorical:
+    - If the user asks for "highest", "all-time high", "ATH", or "peak", you MUST report highest + highestDate.
+
 `,
 
   tools: {

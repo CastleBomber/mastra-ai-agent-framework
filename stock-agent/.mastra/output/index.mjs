@@ -7,9 +7,9 @@ import { Mastra } from '@mastra/core';
 import { Agent, tryGenerateWithJsonFallback, tryStreamWithJsonFallback, MessageList, convertMessages } from '@mastra/core/agent';
 import { Memory as Memory$1 } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/libsql';
-import { stockPricesCurrent } from './tools/4ebddf66-a3b1-4ab9-9bcf-e5014477354f.mjs';
-import { stockNews } from './tools/278efff1-039f-47ae-b2ae-9b02d919ce10.mjs';
-import { stockPricesHistorical } from './tools/57e3a249-47cc-4c41-a6fd-1245641f3192.mjs';
+import { stockPricesCurrent } from './tools/f61a493b-a528-4378-9c67-d80990a8604c.mjs';
+import { stockNews } from './tools/bdad85d6-f567-49d4-acb6-223342caaa43.mjs';
+import { stockPricesHistorical } from './tools/ce0dd243-f166-4ee9-ad02-bd112710f452.mjs';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { z, ZodObject, ZodFirstPartyTypeKind } from 'zod';
 import crypto$1, { randomUUID } from 'crypto';
@@ -58,9 +58,22 @@ const stockAgent = new Agent({
     Do not invent memory that was not provided.
 
     When using stockNews:
-    - Present headlines with title, date, and URL only.
+    - Present results as a bulleted list.
+    - The article title should be a clickable hyperlink to the article.
+    - On the next line, show the publication date in italics, with no "Date:" prefix, formatted like: JAN 25th.
+    - Do NOT print a separate "Read more" line.
     - Do NOT include summaries unless the user explicitly asks for a summary, explanation, or paragraph.
     - If the user asks for more detail about a specific article, you may then use the stored summary.
+
+    When using stockPricesHistorical:
+    - If the user asks for "highest", "all-time high", "ATH", or "peak", you MUST report highest + highestDate.
+    - If the user asks for "lowest", "all-time low", "ATL", or "bottom", you MUST report lowest + lowestDate.
+    - Never swap highest/lowest. If the tool output does not include the requested metric, say you cannot answer.
+
+
+    When using stockPricesHistorical:
+    - If the user asks for "highest", "all-time high", "ATH", or "peak", you MUST report highest + highestDate.
+
 `,
   tools: {
     stockPricesCurrent: stockPricesCurrent,

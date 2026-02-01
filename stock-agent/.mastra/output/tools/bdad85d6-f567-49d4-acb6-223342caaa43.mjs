@@ -4,7 +4,7 @@ import { z } from 'zod';
 const fmt = (d) => d.toISOString().split("T")[0];
 const stockNews = createTool({
   id: "stock-news",
-  description: "Fetches recent company news for a stock symbol (14-day with 90-day fallback",
+  description: "Fetches recent company news for a stock symbol (14-day with 90-day fallback)",
   inputSchema: z.object({
     symbol: z.string()
   }),
