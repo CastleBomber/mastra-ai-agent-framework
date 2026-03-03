@@ -412,3 +412,31 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+
+
+
+# Mastra
+.mastra/
+.mastra.output/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.vercel/
+
+# Environment
+.env.local
+.env.*.local
+
+# Testing
+coverage/
+*.tsbuildinfo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+
