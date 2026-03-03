@@ -8,8 +8,10 @@
  * - all-time highest trading price + date
  *
  * Answers questions like:
- *   - "What is the lowest price SPY has ever traded at?"   $43.94 January 29th, 1993 (IPO)
- *   - "What was GOLD's historical high?"
+ *   - What is the lowest price SPY has ever traded at?   $43.94 January 29th, 1993 (IPO)
+ *   - What was GOLD's historical high?
+ *   - What is the lowest ever price of SPY?
+ *   - What is the highest price ever of WPM?
  * 
  * Strategy (robust + honest):
  *      1) Use Finnhub to fetch candles back to IPO date (via profile2.ipo)
@@ -299,6 +301,4 @@ export const stockPricesHistorical = createTool({
         }
     },
 });
-
-
 

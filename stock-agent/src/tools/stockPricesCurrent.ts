@@ -6,8 +6,8 @@
  * Retrieves the most recent daily closing price for a given stock symbol.
  * 
  * Answers questions like:
- *   - "What is the current price of SPY?"
- *   - "How much is GOLD trading at?"
+ *   - What is the current price of SPY?
+ *   - How much is GOLD trading at?
  *
  * Data source:
  *   mastra-stock-data.vercel.app (aggregated market data)
