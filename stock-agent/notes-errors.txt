@@ -1,3 +1,11 @@
-ERROR [2026-01-07 17:22:38.797 -0800] (Mastra CLI): 
-Could not resolve "../tools/stockPrices" from "src/workflows/stockWorkflow.ts"
--Will need to go through every file in the project and update imports
+# ERROR [2026-01-07 17:22:38.797 -0800] (Mastra CLI): 
+# Could not resolve "../tools/stockPrices" from "src/workflows/stockWorkflow.ts"
+Will need to go through every file in the project and update imports
+
+
+
+
+
+# [package.json] Version issues
+Run and update to the appropriate version #'s from:
+npm view mastra versions

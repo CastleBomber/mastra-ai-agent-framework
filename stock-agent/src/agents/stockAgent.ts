@@ -20,6 +20,7 @@
  */
 
 import { Agent } from "@mastra/core/agent";
+import { openai } from "@ai-sdk/openai"; 
 import { Memory } from "@mastra/memory";
 import { LibSQLStore } from "@mastra/libsql";
 import * as stockPricesCurrentTools from "../tools/stockPricesCurrent";
@@ -29,12 +30,16 @@ import * as stockPricesHistoricalTools from "../tools/stockPricesHistorical";
 // --- Memory Setup ---
 const mem = new Memory({
   options: { lastMessages: 50 },
-  storage: new LibSQLStore({ url: "file:./mastra.db" }),
+  storage: new LibSQLStore({ 
+    id: "stock-agent-storage",
+    url: "file:./mastra.db",
+  }),
 });
 
 export const stockAgent = new Agent({
+  id: "stock-agent",
   name: "Stock Agent",
-  model: "openai/gpt-4o-mini",
+  model: 'openai/gpt-4o',
   memory: mem,
 
   instructions: `
@@ -54,13 +59,7 @@ export const stockAgent = new Agent({
     When using stockPricesHistorical:
     - If the user asks for "highest", "all-time high", "ATH", or "peak", you MUST report highest + highestDate.
     - If the user asks for "lowest", "all-time low", "ATL", or "bottom", you MUST report lowest + lowestDate.
-    - Never swap highest/lowest. If the tool output does not include the requested metric, say you cannot answer.
-
-
-    When using stockPricesHistorical:
-    - If the user asks for "highest", "all-time high", "ATH", or "peak", you MUST report highest + highestDate.
-
-`,
+    - Never swap highest/lowest. If the tool output does not include the requested metric, say you cannot answer.`,
 
   tools: {
     stockPricesCurrent: stockPricesCurrentTools.stockPricesCurrent,

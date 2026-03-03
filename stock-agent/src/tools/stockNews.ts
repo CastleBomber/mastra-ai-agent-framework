@@ -49,8 +49,11 @@ export const stockNews = createTool({
     note: z.string().optional(),
   }),
 
-  execute: async ({ context }) => {
-    const { symbol } = context;
+  execute: async (inputData, context) => {
+    const { symbol } = inputData;
+    console.log("Tool inputData:", inputData);
+    console.log("Tool context", context);
+
 
     const to = fmt(new Date());
     const from14 = fmt(new Date(Date.now() - 14 * 24 * 60 * 60 * 1000));
@@ -59,7 +62,7 @@ export const stockNews = createTool({
     const fetchNews = async (from: string) => {
       const url = `https://finnhub.io/api/v1/company-news?symbol=${symbol}&from=${from}&to=${to}&token=${process.env.FINNHUB_KEY}`;
       const res = await fetch(url).then(r => r.json());
-      return Array.isArray(res) ? res : [];
+      return Array.isArray(res) ? res : []; 
     };
 
     // 1) Try 14 days

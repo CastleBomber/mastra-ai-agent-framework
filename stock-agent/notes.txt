@@ -1,9 +1,9 @@
-# Starts server and project on localhost:4112 or 4111 
-# (run from stock-agent/, the project's root directory)
+# Start
+#
+# Runs server and project on localhost:4112 or 4111 
+# run from the root directory: stock-agent/
+
 npx mastra dev --dir src
-
-
-
 
 
 
@@ -13,3 +13,13 @@ General Electric (GE) – public since ~1892
 Coca-Cola (KO) – public since 1919
 Ford Motor Company (F) – public since 1956
 Procter & Gamble (PG) – public since 1891
+
+
+
+Workflows have replaced: pipeline and flow
+
+
+API's that pull financial information
+New: AlphaVantage vs Old: Finnhub
+
+

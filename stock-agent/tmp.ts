@@ -1,62 +1,37 @@
-import { createTool } from "@mastra/core/tools";
-import { z } from "zod";
-
 export const stockPricesHistorical = createTool({
-  id: "stock-prices-historical",
-  description:
-    "Fetches historical daily OHLC data and returns the all-time lowest (daily low) and highest (daily high) prices with dates",
+    id: "stock-prices-historical",
+    description: "Historical all-time low/high using Finnhub (with Yahoo fallback)...",
+    inputSchema: z.object({ symbol: z.string() }),
+    outputSchema: z.object({ /* ... your output schema ... */ }),
 
-  inputSchema: z.object({
-    symbol: z.string(),
-  }),
+    // ✅ CORRECT v1 SIGNATURE: (inputData, context)
+    execute: async (inputData, context) => {
+        // 1. Access the symbol directly from inputData (the first parameter)
+        const { symbol } = inputData;
+        console.log("Tool inputData:", inputData);
+        console.log("Tool context:", context); // This now holds requestContext, agent info, etc.
 
-  outputSchema: z.object({
-    symbol: z.string(),
-    lowest: z.number(),
-    lowestDate: z.string(),
-    highest: z.number(),
-    highestDate: z.string(),
-  }),
+        if (!symbol) {
+            throw new Error(`Symbol is required. Received inputData: ${JSON.stringify(inputData)}`);
+        }
 
-  execute: async ({ context }) => {
-    const { symbol } = context;
+        // --- The rest of your function logic remains the same, using the 'symbol' variable ---
+        let ipoDate: string | undefined;
+        try {
+            const p = await finnhubProfile2(symbol);
+            if (p?.ipo) ipoDate = p.ipo;
+        } catch { /* ... */ }
 
-    const url =
-      `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY` +
-      `&symbol=${encodeURIComponent(symbol)}` +
-      `&outputsize=full` +                          // ✅ IMPORTANT
-      `&apikey=${process.env.ALPHA_KEY}`;
+        const now = new Date();
+        const to = toUnix(now);
+        const fromDate = ipoDate ? new Date(`${ipoDate}T00:00:00Z`) : new Date("1980-01-01T00:00:00Z");
+        const from = toUnix(fromDate);
 
-    const res = await fetch(url).then((r) => r.json());
-
-    if (res?.["Error Message"]) {
-      throw new Error(`Alpha Vantage error for ${symbol}: ${res["Error Message"]}`);
-    }
-    if (res?.["Note"]) {
-      throw new Error(`Alpha Vantage rate limit hit: ${res["Note"]}`);
-    }
-
-    const series = res?.["Time Series (Daily)"];
-    if (!series) throw new Error(`No historical data returned for ${symbol}`);
-
-    let lowest = Number.POSITIVE_INFINITY;
-    let lowestDate = "";
-    let highest = Number.NEGATIVE_INFINITY;
-    let highestDate = "";
-
-    for (const [date, data] of Object.entries(series)) {
-      const low = parseFloat((data as any)["3. low"]);
-      const high = parseFloat((data as any)["2. high"]);
-      if (!Number.isFinite(low) || !Number.isFinite(high)) continue;
-
-      if (low < lowest) { lowest = low; lowestDate = date; }
-      if (high > highest) { highest = high; highestDate = date; }
-    }
-
-    if (!Number.isFinite(lowest) || !Number.isFinite(highest)) {
-      throw new Error(`Could not compute low/high for ${symbol}`);
-    }
-
-    return { symbol, lowest, lowestDate, highest, highestDate };
-  },
+        try {
+            const candle = await finnhubCandlesDaily(symbol, from, to);
+            // ... rest of your Finnhub logic ...
+        } catch (err) {
+            // ... your Yahoo fallback logic ...
+        }
+    },
 });

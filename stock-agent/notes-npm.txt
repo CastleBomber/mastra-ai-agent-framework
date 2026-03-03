@@ -1,0 +1,18 @@
+# Used when making major updates to code
+rm -rf .mastra node_modules/.cache
+npx mastra dev --dir src 
+
+
+
+# Updating
+npm install @mastra/core@latest \
+            @mastra/memory@latest \
+            @mastra/libsql@latest
+
+
+
+# Used to upgrade package.json 
+# make sure all files are saved (package.json)
+# if not, will not work
+rm -rf node_modules .mastra package-lock.json
+npm install

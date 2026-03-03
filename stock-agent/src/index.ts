@@ -30,7 +30,10 @@ import { LibSQLStore } from "@mastra/libsql";
 export const mastra = new Mastra({
   agents: { stockAgent },
   workflows: { stockWorkflow },
-  storage: new LibSQLStore({ url: "file:./mastra.db" }),
+  storage: new LibSQLStore({ 
+    id: "stock-agent-storage",
+    url: "file:./mastra.db" 
+  }),
 });
 
  

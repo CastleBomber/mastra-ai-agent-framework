@@ -20,7 +20,7 @@ const getStockPrice = async (symbol: string) => {
   const r = await fetch(
     `https://mastra-stock-data.vercel.app/api/stock-data?symbol=${symbol}`,
   );
-  
+
   if (!r.ok) {
     throw new Error(`Price API failed for ${symbol}`);
   }
@@ -42,9 +42,10 @@ export const stockPricesCurrent = createTool({
     currentPrice: z.string(),
   }),
 
-  execute: async ({ context }) => {
-    const { symbol } = context;
-    console.log("Using tool to fetch current stock price for", symbol);
+  execute: async (inputData, context) => {
+    const { symbol } = inputData;
+    console.log("Tool inputData:", inputData);
+    console.log("Tool context", context);
 
     return {
       symbol,
