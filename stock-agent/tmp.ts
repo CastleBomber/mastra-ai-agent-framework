@@ -1,37 +1,64 @@
+// ----------------------------------------------------------------------
+// Types
+// ----------------------------------------------------------------------
+
+// Finnhub company profile response, containing IPO date if available.
+type FinnhubProfile2 = {
+    ipo?: string; // "1980-12-12"
+};
+
+// Finnhub candle (OHLC) response for a given symbol and date range.
+// 's' indicates success status, arrays hold parallel time/price data.
+type FinnhubCandle = {
+    s: "ok" | "no_data";
+    t?: number[]; // unix seconds
+    h?: number[];
+    l?: number[];
+};
+
+// ----------------------------------------------------------------------
+// Helper Functions
+// ----------------------------------------------------------------------
+
+// Converts a Date object to Unix timestamp (seconds).
+const toUnix = (date: Date) => Math.floor(date.getTime() / 1000);
+
+// Formats a Unix timestamp (seconds) as YYYY-MM-DD.
+const isoDay = (unixSeconds: number) =>
+    new Date(unixSeconds * 1000).toISOString().split("T")[0];
+
+// Generic fetch wrapper with timeout and error handling.
+async function fetchJson<T>(url: string, timeoutMs = 12_000): Promise<T> {
+    // ...implementation...
+}
+
+// Fetches company profile (including IPO date) from Finnhub.
+async function finnhubProfile2(symbol: string): Promise<FinnhubProfile2> {
+    // ...implementation...
+}
+
+// Fetches daily candlestick data from Finnhub for the given date range.
+export function finnhubCandlesDaily(symbol: string, fromUnix: number, toUnix: number): Promise<FinnhubCandle> {
+    // ...implementation...
+}
+
+// Computes all‑time low/high and their dates from parallel candle arrays.
+function computeLowHighFromArrays(t: number[], lows: number[], highs: number[]) {
+    // ...implementation...
+}
+
+// Fallback: fetch all‑time low/high from Yahoo Finance.
+async function yahooLowHigh(symbol: string) {
+    // ...implementation...
+}
+
+// ----------------------------------------------------------------------
+// Main Tool Definition
+// ----------------------------------------------------------------------
+
 export const stockPricesHistorical = createTool({
-    id: "stock-prices-historical",
-    description: "Historical all-time low/high using Finnhub (with Yahoo fallback)...",
-    inputSchema: z.object({ symbol: z.string() }),
-    outputSchema: z.object({ /* ... your output schema ... */ }),
-
-    // ✅ CORRECT v1 SIGNATURE: (inputData, context)
-    execute: async (inputData, context) => {
-        // 1. Access the symbol directly from inputData (the first parameter)
-        const { symbol } = inputData;
-        console.log("Tool inputData:", inputData);
-        console.log("Tool context:", context); // This now holds requestContext, agent info, etc.
-
-        if (!symbol) {
-            throw new Error(`Symbol is required. Received inputData: ${JSON.stringify(inputData)}`);
-        }
-
-        // --- The rest of your function logic remains the same, using the 'symbol' variable ---
-        let ipoDate: string | undefined;
-        try {
-            const p = await finnhubProfile2(symbol);
-            if (p?.ipo) ipoDate = p.ipo;
-        } catch { /* ... */ }
-
-        const now = new Date();
-        const to = toUnix(now);
-        const fromDate = ipoDate ? new Date(`${ipoDate}T00:00:00Z`) : new Date("1980-01-01T00:00:00Z");
-        const from = toUnix(fromDate);
-
-        try {
-            const candle = await finnhubCandlesDaily(symbol, from, to);
-            // ... rest of your Finnhub logic ...
-        } catch (err) {
-            // ... your Yahoo fallback logic ...
-        }
+    // ...configuration...
+    execute: async ( inputData, context ) => {
+        // ...implementation...
     },
 });

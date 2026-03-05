@@ -12,6 +12,8 @@
  *   - What was GOLD's historical high?
  *   - What is the lowest ever price of SPY?
  *   - What is the highest price ever of WPM?
+ *   - *What is the lowest ever price of GE? (public since ~1892)
+ *   - *What is the lowest ever price of PG? (public since 1891)
  * 
  * Strategy (robust + honest):
  *      1) Use Finnhub to fetch candles back to IPO date (via profile2.ipo)
@@ -34,22 +36,38 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import YahooFinance from "yahoo-finance2";
 
+// ----------------------------------------------------------------------
+// Types
+// ----------------------------------------------------------------------
+
+// Finnhub API (2nd version, endpoint: /stock/profile2)
+// response contains IPO date if available)
 type FinnhubProfile2 = {
     ipo?: string; // "1980-12-12"
 };
 
+// Finnhub candle (Open, High, Low, Close), time/price data, response for a given symbol and date range
 type FinnhubCandle = {
-    s: "ok" | "no_data";
-    t?: number[]; // unix seconds
-    h?: number[];
-    l?: number[];
+    s: "ok" | "no_data"; // Success status
+    t?: number[];        // Unix timestamps (seconds) for each trading day
+    h?: number[];        // Daily high prices
+    l?: number[];        // Daily low prices
 };
 
-const yahooFinance = new YahooFinance();
+// ----------------------------------------------------------------------
+// Helper functions
+// ----------------------------------------------------------------------
+
+
+
+// Converts a Date object to Unix timestamp (seconds)
 const toUnix = (date: Date) => Math.floor(date.getTime() / 1000);
+
+// Formats a Unix timestamp (seconds) as YYYY-MM-DD
 const isoDay = (unixSeconds: number) =>
     new Date(unixSeconds * 1000).toISOString().split("T")[0];
 
+// Fetch wrapper w/ timeout and error handling
 async function fetchJson<T>(url: string, timeoutMs = 12_000): Promise<T> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -63,6 +81,7 @@ async function fetchJson<T>(url: string, timeoutMs = 12_000): Promise<T> {
     }
 }
 
+// Fetches company profile (including IPO date) from Finnhub
 async function finnhubProfile2(symbol: string): Promise<FinnhubProfile2> {
     const token = process.env.FINNHUB_KEY;
     if (!token) throw new Error("Missing FINNHUB_KEY in environment");
@@ -75,6 +94,7 @@ async function finnhubProfile2(symbol: string): Promise<FinnhubProfile2> {
     return fetchJson<FinnhubProfile2>(url);
 }
 
+// Fetches daily candlestick data from Finnhub for the given date range
 export function finnhubCandlesDaily(symbol: string, fromUnix: number, toUnix: number): Promise<FinnhubCandle> {
     const token = process.env.FINNHUB_KEY;
     if (!token) throw new Error("Missing FINNHUB_KEY in enviroment");
@@ -90,6 +110,7 @@ export function finnhubCandlesDaily(symbol: string, fromUnix: number, toUnix: nu
     return fetchJson<FinnhubCandle>(url);
 }
 
+// Computes all-time low/high and their dates from parallel candle arrays
 function computeLowHighFromArrays(t: number[], lows: number[], highs: number[]) {
     let lowest = Number.POSITIVE_INFINITY;
     let lowestT = 0;
@@ -126,6 +147,9 @@ function computeLowHighFromArrays(t: number[], lows: number[], highs: number[]) 
     };
 }
 
+const yahooFinance = new YahooFinance();
+
+// Fallback: fetch all-time low/high from Yahoo Finance
 async function yahooLowHigh(symbol: string) {
     // Pull max available daily Yahoo will provide
     const chart = await yahooFinance.chart(symbol, {
@@ -133,7 +157,7 @@ async function yahooLowHigh(symbol: string) {
         interval: "1d",
     });
 
-    // HARD GAURD: chart must exist and be an object
+    // 🔒 HARD GAURD: chart must exist and be an object
     if (!chart || typeof chart !== "object") {
         throw new Error(`Yahoo fallback returned invalid chart object for ${symbol}`);
     }
@@ -187,6 +211,10 @@ async function yahooLowHigh(symbol: string) {
     return { lowest, lowestDate, highest, highestDate };
 }
 
+// ----------------------------------------------------------------------
+// Main tool definition
+// ----------------------------------------------------------------------
+
 export const stockPricesHistorical = createTool({
     id: "stock-prices-historical",
     description:
@@ -218,7 +246,7 @@ export const stockPricesHistorical = createTool({
         console.log("Tool context", context);
 
         if (!symbol) {
-            throw new Error(`Symbol is required but was not provided in the arguments. Received args: ${JSON.stringify(args)}`);
+            throw new Error(`Symbol is required but was not provided in the arguments. Received args: ${JSON.stringify(inputData)}`);
         }
 
         // 1) Determine IPO date (so "all-time" means "since IPO")
