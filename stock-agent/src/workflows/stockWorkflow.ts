@@ -1,8 +1,14 @@
-import { createWorkflow, createStep } from "@mastra/core/workflows";
+import { Workflow } from "@mastra/core/workflows";
 import { z } from "zod";
 import { stockPricesCurrent } from "../tools/stockPricesCurrent";
 import { stockPricesHistorical } from "../tools/stockPricesHistorical";
 import { stockNews } from "../tools/stockNews";
+
+// Define the workflow
+export const stockWorkflow = new Workflow ({
+    name: "stock-detective",
+
+})
 
 // Step 1: get current price
 const stepGetPrice = createStep({
