@@ -1,64 +1,112 @@
-// ----------------------------------------------------------------------
-// Types
-// ----------------------------------------------------------------------
+// import { Workflow } from "@mastra/core/workflows";
+// import { z } from "zod";
+// import { stockPricesCurrent } from "../tools/stockPricesCurrent";
+// import { stockPricesHistorical } from "../tools/stockPricesHistorical";
+// import { stockNews } from "../tools/stockNews";
 
-// Finnhub company profile response, containing IPO date if available.
-type FinnhubProfile2 = {
-    ipo?: string; // "1980-12-12"
-};
+// // Define the workflow
+// export const stockWorkflow = new Workflow({
+//   name: "stock-detective",
+//   triggerSchema: z.object({
+//     symbol: z.string(),
+//   }),
+// });
 
-// Finnhub candle (OHLC) response for a given symbol and date range.
-// 's' indicates success status, arrays hold parallel time/price data.
-type FinnhubCandle = {
-    s: "ok" | "no_data";
-    t?: number[]; // unix seconds
-    h?: number[];
-    l?: number[];
-};
+// // Step 1: Get current price
+// stockWorkflow.step(
+//   {
+//     id: "getPrice",
+//     outputSchema: z.object({
+//       currentPrice: z.string(),
+//     }),
+//   },
+//   async (context) => {
+//     const { symbol } = context.triggerData;
+//     const result = await stockPricesCurrent.execute({ symbol });
+//     return { currentPrice: result.currentPrice };
+//   }
+// );
 
-// ----------------------------------------------------------------------
-// Helper Functions
-// ----------------------------------------------------------------------
+// // Step 2: Get all‑time low/high
+// stockWorkflow.step(
+//   {
+//     id: "getHistorical",
+//     outputSchema: z.object({
+//       lowest: z.number(),
+//       lowestDate: z.string(),
+//       highest: z.number(),
+//       highestDate: z.string(),
+//     }),
+//   },
+//   async (context) => {
+//     const { symbol } = context.triggerData;
+//     const result = await stockPricesHistorical.execute({ symbol });
+//     return {
+//       lowest: result.lowest,
+//       lowestDate: result.lowestDate,
+//       highest: result.highest,
+//       highestDate: result.highestDate,
+//     };
+//   }
+// );
 
-// Converts a Date object to Unix timestamp (seconds).
-const toUnix = (date: Date) => Math.floor(date.getTime() / 1000);
+// // Step 3: Get recent news
+// stockWorkflow.step(
+//   {
+//     id: "getNews",
+//     outputSchema: z.object({
+//       headlines: z.array(
+//         z.object({
+//           title: z.string(),
+//           date: z.string(),
+//           url: z.string(),
+//         })
+//       ),
+//     }),
+//   },
+//   async (context) => {
+//     const { symbol } = context.triggerData;
+//     const result = await stockNews.execute({ symbol });
+//     return { headlines: result.headlines };
+//   }
+// );
 
-// Formats a Unix timestamp (seconds) as YYYY-MM-DD.
-const isoDay = (unixSeconds: number) =>
-    new Date(unixSeconds * 1000).toISOString().split("T")[0];
+// // Step 4: Calculate distance from all-time high (above or below)
+// stockWorkflow.step(
+//     {
+//       id: "getPercentFromATH",
+//       outputSchema: z.object({
+//         percentFromATH: z.string().optional(), // e.g., "2.5% above ATH" or "1.3% below ATH"
+//       }),
+//     },
+//     async (context) => {
+//       const priceStep = context.steps.getPrice;
+//       const histStep = context.steps.getHistorical;
+  
+//       if (priceStep?.status === "success" && histStep?.status === "success") {
+//         const current = parseFloat(priceStep.output.currentPrice);
+//         const ath = histStep.output.highest;
+//         const diffPercent = ((current - ath) / ath) * 100;
+//         const absPercent = Math.abs(diffPercent).toFixed(2);
+//         const direction = current >= ath ? "above" : "below";
+//         return { percentFromATH: `${absPercent}% ${direction} ATH` };
+//       }
+//       return {}; // skip if missing data
+//     }
+//   );
 
-// Generic fetch wrapper with timeout and error handling.
-async function fetchJson<T>(url: string, timeoutMs = 12_000): Promise<T> {
-    // ...implementation...
-}
-
-// Fetches company profile (including IPO date) from Finnhub.
-async function finnhubProfile2(symbol: string): Promise<FinnhubProfile2> {
-    // ...implementation...
-}
-
-// Fetches daily candlestick data from Finnhub for the given date range.
-export function finnhubCandlesDaily(symbol: string, fromUnix: number, toUnix: number): Promise<FinnhubCandle> {
-    // ...implementation...
-}
-
-// Computes all‑time low/high and their dates from parallel candle arrays.
-function computeLowHighFromArrays(t: number[], lows: number[], highs: number[]) {
-    // ...implementation...
-}
-
-// Fallback: fetch all‑time low/high from Yahoo Finance.
-async function yahooLowHigh(symbol: string) {
-    // ...implementation...
-}
-
-// ----------------------------------------------------------------------
-// Main Tool Definition
-// ----------------------------------------------------------------------
-
-export const stockPricesHistorical = createTool({
-    // ...configuration...
-    execute: async ( inputData, context ) => {
-        // ...implementation...
-    },
-});
+// // Commit the workflow
+// stockWorkflow
+//   .commit()
+//   .outputSchema(
+//     z.object({
+//       symbol: z.string(),
+//       currentPrice: z.string(),
+//       lowest: z.number(),
+//       lowestDate: z.string(),
+//       highest: z.number(),
+//       highestDate: z.string(),
+//       headlines: z.array(z.object({ title: z.string(), date: z.string(), url: z.string() })),
+//       percentFromATH: z.string().optional(),
+//     })
+//   );

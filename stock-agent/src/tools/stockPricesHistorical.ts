@@ -26,6 +26,9 @@
  * Backup data source:
  *      Yahoo Finance (via yahoo-finance2)
  *      No longer using AlphaVantage (limited dates)
+ * 
+ * Current price data source:
+ *      mastra-stock-data.vercel.app (aggregated market data)
  *
  * Notes:
  *   - profile2: currently supported Finnhub API endpoint

@@ -11,6 +11,11 @@
  *
  * Data source:
  *   mastra-stock-data.vercel.app (aggregated market data)
+ * 
+ * Historical price data sources (stockPricesHistorical):
+ *      Finnhub (profile2 + stock candles)
+ *      Yahoo Finance (via yahoo-finance2)
+ *      No longer using AlphaVantage (limited dates)
  */
 
 import { createTool } from "@mastra/core/tools";
