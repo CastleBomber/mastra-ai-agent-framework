@@ -1,112 +1,90 @@
-// import { Workflow } from "@mastra/core/workflows";
-// import { z } from "zod";
-// import { stockPricesCurrent } from "../tools/stockPricesCurrent";
-// import { stockPricesHistorical } from "../tools/stockPricesHistorical";
-// import { stockNews } from "../tools/stockNews";
+import { createWorkflow, createStep } from "@mastra/core/workflows";
+import { z } from "zod";
+import { stockPricesCurrent } from "../tools/stockPricesCurrent";
+import { stockPricesHistorical } from "../tools/stockPricesHistorical";
+import { stockNews } from "../tools/stockNews";
 
-// // Define the workflow
-// export const stockWorkflow = new Workflow({
-//   name: "stock-detective",
-//   triggerSchema: z.object({
-//     symbol: z.string(),
-//   }),
-// });
+// --- Define each step with createStep ---
+const stepGetPrice = createStep({
+  id: "getPrice",
+  inputSchema: z.object({ symbol: z.string() }),
+  outputSchema: z.object({ currentPrice: z.string() }),
+  execute: async ({ inputData }) => {
+    const result = await stockPricesCurrent.execute({ symbol: inputData.symbol });
+    return { currentPrice: result.currentPrice };
+  }
+});
 
-// // Step 1: Get current price
-// stockWorkflow.step(
-//   {
-//     id: "getPrice",
-//     outputSchema: z.object({
-//       currentPrice: z.string(),
-//     }),
-//   },
-//   async (context) => {
-//     const { symbol } = context.triggerData;
-//     const result = await stockPricesCurrent.execute({ symbol });
-//     return { currentPrice: result.currentPrice };
-//   }
-// );
+const stepGetHistorical = createStep({
+  id: "getHistorical",
+  inputSchema: z.object({ symbol: z.string() }),
+  outputSchema: z.object({
+    lowest: z.number(),
+    lowestDate: z.string(),
+    highest: z.number(),
+    highestDate: z.string(),
+  }),
+  execute: async ({ inputData }) => {
+    const result = await stockPricesHistorical.execute({ symbol: inputData.symbol });
+    return {
+      lowest: result.lowest,
+      lowestDate: result.lowestDate,
+      highest: result.highest,
+      highestDate: result.highestDate,
+    };
+  }
+});
 
-// // Step 2: Get all‑time low/high
-// stockWorkflow.step(
-//   {
-//     id: "getHistorical",
-//     outputSchema: z.object({
-//       lowest: z.number(),
-//       lowestDate: z.string(),
-//       highest: z.number(),
-//       highestDate: z.string(),
-//     }),
-//   },
-//   async (context) => {
-//     const { symbol } = context.triggerData;
-//     const result = await stockPricesHistorical.execute({ symbol });
-//     return {
-//       lowest: result.lowest,
-//       lowestDate: result.lowestDate,
-//       highest: result.highest,
-//       highestDate: result.highestDate,
-//     };
-//   }
-// );
+const stepGetNews = createStep({
+  id: "getNews",
+  inputSchema: z.object({ symbol: z.string() }),
+  outputSchema: z.object({
+    headlines: z.array(z.object({ title: z.string(), date: z.string(), url: z.string() })),
+  }),
+  execute: async ({ inputData }) => {
+    const result = await stockNews.execute({ symbol: inputData.symbol });
+    return { headlines: result.headlines };
+  }
+});
 
-// // Step 3: Get recent news
-// stockWorkflow.step(
-//   {
-//     id: "getNews",
-//     outputSchema: z.object({
-//       headlines: z.array(
-//         z.object({
-//           title: z.string(),
-//           date: z.string(),
-//           url: z.string(),
-//         })
-//       ),
-//     }),
-//   },
-//   async (context) => {
-//     const { symbol } = context.triggerData;
-//     const result = await stockNews.execute({ symbol });
-//     return { headlines: result.headlines };
-//   }
-// );
+const stepGetPercentFromATH = createStep({
+  id: "getPercentFromATH",
+  inputSchema: z.object({ symbol: z.string() }),
+  outputSchema: z.object({ percentFromATH: z.string().optional() }),
+  execute: async ({ inputData, context }) => {
+    // This step requires previous step results — we'll handle via workflow state
+    // In v1, steps can access previous step outputs via context.steps
+    const priceStep = context.steps.getPrice;
+    const histStep = context.steps.getHistorical;
+    if (priceStep?.status === "success" && histStep?.status === "success") {
+      const current = parseFloat(priceStep.output.currentPrice);
+      const ath = histStep.output.highest;
+      const diffPercent = ((current - ath) / ath) * 100;
+      const absPercent = Math.abs(diffPercent).toFixed(2);
+      const direction = current >= ath ? "above" : "below";
+      return { percentFromATH: `${absPercent}% ${direction} ATH` };
+    }
+    return {};
+  }
+});
 
-// // Step 4: Calculate distance from all-time high (above or below)
-// stockWorkflow.step(
-//     {
-//       id: "getPercentFromATH",
-//       outputSchema: z.object({
-//         percentFromATH: z.string().optional(), // e.g., "2.5% above ATH" or "1.3% below ATH"
-//       }),
-//     },
-//     async (context) => {
-//       const priceStep = context.steps.getPrice;
-//       const histStep = context.steps.getHistorical;
-  
-//       if (priceStep?.status === "success" && histStep?.status === "success") {
-//         const current = parseFloat(priceStep.output.currentPrice);
-//         const ath = histStep.output.highest;
-//         const diffPercent = ((current - ath) / ath) * 100;
-//         const absPercent = Math.abs(diffPercent).toFixed(2);
-//         const direction = current >= ath ? "above" : "below";
-//         return { percentFromATH: `${absPercent}% ${direction} ATH` };
-//       }
-//       return {}; // skip if missing data
-//     }
-//   );
-
-// // Commit the workflow
-// stockWorkflow
-//   .commit()
-//   .outputSchema(
-//     z.object({
-//       symbol: z.string(),
-//       currentPrice: z.string(),
-//       lowest: z.number(),
-//       lowestDate: z.string(),
-//       highest: z.number(),
-//       highestDate: z.string(),
-//       headlines: z.array(z.object({ title: z.string(), date: z.string(), url: z.string() })),
-//       percentFromATH: z.string().optional(),
-//     })
-//   );
+// --- Compose workflow with .then() chaining (or .step() if available — check docs) ---
+export const stockWorkflow = createWorkflow({
+  id: "stock-detective",
+  inputSchema: z.object({ symbol: z.string() }),
+  outputSchema: z.object({
+    symbol: z.string(),
+    currentPrice: z.string(),
+    lowest: z.number(),
+    lowestDate: z.string(),
+    highest: z.number(),
+    highestDate: z.string(),
+    headlines: z.array(z.object({ title: z.string(), date: z.string(), url: z.string() })),
+    percentFromATH: z.string().optional(),
+  }),
+})
+  .then(stepGetPrice)
+  .then(stepGetHistorical)
+  .then(stepGetNews)
+  .then(stepGetPercentFromATH)
+  .commit();
