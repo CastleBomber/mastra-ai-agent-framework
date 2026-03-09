@@ -61,6 +61,7 @@ const stepGetPercentFromATH = createStep({
     inputSchema: z.object({ symbol: z.string() }),
     outputSchema: z.object({
         percentFromATH: z.string().optional(), // e.g. "2.5%  above ATH" or "1.3% below ATH"
+        symbol: z.string(),
     }),
     execute: async ({ inputData, context }) => {
         const priceStep = context.steps.getPrice;
@@ -74,12 +75,15 @@ const stepGetPercentFromATH = createStep({
             const direction = current >= ath ? "above" : "below";
             return { percentFromATH: `${absPercent}% ${direction} ATH` };
         }
-        return {}; // skip if missing data
+        return {
+            percentFromATH: `${absPercent}% ${direction} ATH`,
+            symbol: inputData.symbol,
+        }; 
     }
-);
+});
 
 // Define the workflow
-export const stockWorkflow = new Workflow({
+export const stockWorkflow = createWorkflow({
     name: "stock-detective",
     inputSchema: z.object({ symbol: z.string() }),
     outputSchema: z.object({
@@ -90,7 +94,7 @@ export const stockWorkflow = new Workflow({
         highest: z.number(),
         highestDate: z.string(),
         headlines: z.array(z.object({ title: z.string(), date: z.string(), url: z.string() })),
-        percentFromATH: z.string.optional(),
+        percentFromATH: z.string().optional(),
         }),
     })
      .then(stepGetCurrentPrice)
