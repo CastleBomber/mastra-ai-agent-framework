@@ -73,10 +73,15 @@ const stepGetPercentFromATH = createStep({
             const diffPercent = ((current - ath) / ath) * 100;
             const absPercent = Math.abs(diffPercent).toFixed(2);
             const direction = current >= ath ? "above" : "below";
-            return { percentFromATH: `${absPercent}% ${direction} ATH` };
+
+            return { 
+                percentFromATH: `${absPercent}% ${direction} ATH` ,
+                symbol: inputData.symbol,
+            };
         }
+
+        // If prerequisite steps failed, return only the symbol (percentFromATH omitted)
         return {
-            percentFromATH: `${absPercent}% ${direction} ATH`,
             symbol: inputData.symbol,
         }; 
     }
@@ -95,10 +100,11 @@ export const stockWorkflow = createWorkflow({
         highestDate: z.string(),
         headlines: z.array(z.object({ title: z.string(), date: z.string(), url: z.string() })),
         percentFromATH: z.string().optional(),
-        }),
-    })
+    }),
+})
      .then(stepGetCurrentPrice)
      .then(stepGetHistoricalPrices)
      .then(stepGetNews)
      .then(stepGetPercentFromATH)
      .commit();
+     
