@@ -89,16 +89,11 @@ const stepGetPercentFromATH = createStep({
 
 // Define the workflow
 export const stockWorkflow = createWorkflow({
-    name: "stock-detective",
+    id: "stock-detective",
+    name: "Stock Detective",
     inputSchema: z.object({ symbol: z.string() }),
     outputSchema: z.object({
         symbol: z.string(),
-        currentPrice: z.string(),
-        lowest: z.number(),
-        lowestDate: z.string(),
-        highest: z.number(),
-        highestDate: z.string(),
-        headlines: z.array(z.object({ title: z.string(), date: z.string(), url: z.string() })),
         percentFromATH: z.string().optional(),
     }),
 })
