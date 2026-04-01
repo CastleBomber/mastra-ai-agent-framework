@@ -1,9 +1,7 @@
 /**
  * index.ts
  * --------
- * Author: CastleBomber
- * Project: Web-Pages-Unleashed
- * Date: November 26th, 2025
+ * Author: DeepSeek + ChatGPT CBOMBS
  * 
  * Entry point for the Mastra application.
  *
@@ -18,13 +16,13 @@
  *
  * Acknowledgements:
  *   - Mastra Course
- *   - ChatGPT
  */
 
 import "dotenv/config";
 import { Mastra } from "@mastra/core";
+import { Observability, DefaultExporter, SensitiveDataFilter } from "@mastra/observability";
 import { stockAgent } from "./agents/stockAgent";
-import { stockWorkflow } from "./workflows/stockWorkflow"
+import { stockWorkflow } from "./workflows/stockWorkflow";
 import { LibSQLStore } from "@mastra/libsql";
 
 export const mastra = new Mastra({
@@ -33,6 +31,17 @@ export const mastra = new Mastra({
   storage: new LibSQLStore({ 
     id: "stock-agent-storage",
     url: "file:./mastra.db" 
+  }),
+  observability: new Observability({
+    configs: {
+      default: {
+        serviceName: "stock-agent",
+        exporters: [
+          new DefaultExporter(),
+        ],
+        spanOutputProcessors: [new SensitiveDataFilter()],
+      },
+    },
   }),
 });
 

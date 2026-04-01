@@ -1,0 +1,10 @@
+# Show last commit message
+git log -1 --format=%B
+
+
+
+# -------------------------------------------------
+# Tree
+# Show 2 levels deep of subfolders
+
+tree -d -L 2

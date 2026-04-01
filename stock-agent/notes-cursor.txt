@@ -1,1 +1,19 @@
-Fold current block: Cmd + Option + [
+Fold current block: 
+Cmd + Option + [
+
+
+
+Open Command Palette:
+Mac: ⌘ + Shift + P
+
+
+
+Restart TypeScript server:
+Cmd+Shift+P 
+→ TypeScript: Restart TS server
+
+
+
+Clear editor cache:
+Cmd+Shift+P 
+→ Developer: Reload Window
