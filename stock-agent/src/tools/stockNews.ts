@@ -51,9 +51,6 @@ export const stockNews = createTool({
 
   execute: async (inputData, context) => {
     const { symbol } = inputData;
-    console.log("Tool inputData:", inputData);
-    console.log("Tool context", context);
-
 
     const to = fmt(new Date());
     const from14 = fmt(new Date(Date.now() - 14 * 24 * 60 * 60 * 1000));

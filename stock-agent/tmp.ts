@@ -1,60 +1,43 @@
-// import { createWorkflow, createStep } from "@mastra/core/workflows";
-// import { z } from "zod";
-// import { stockWorkflow } from "./stockWorkflow";
-
-// /*
-// Input:
-// ["NVDA","AAPL","MSFT"]
-// */
-
-// const stepCompare = createStep({
-//   id: "rank",
-//   inputSchema: z.record(z.any()),
-//   outputSchema: z.object({
-//     ranked: z.array(
-//       z.object({
-//         symbol: z.string(),
-//         percentFromATH: z.string().optional(),
-//       })
-//     ),
-//   }),
-
-//   execute: async ({ inputData }) => {
-//     // flatten parallel results
-//     const values = Object.values(inputData) as any[];
-
-//     const ranked = values
-//       .map(v => ({
-//         symbol: v.symbol,
-//         percentFromATH: v.percentFromATH,
-//         raw: parseFloat(v.percentFromATH?.split("%")[0] || "999"),
-//       }))
-//       .sort((a, b) => a.raw - b.raw); // closest to ATH first
-
-//     return {
-//       ranked,
-//     };
-//   },
-// });
-
-// export const compareStocksWorkflow = createWorkflow({
-//   id: "compare-stocks",
-//   inputSchema: z.object({
-//     symbols: z.array(z.string()),
-//   }),
-//   outputSchema: z.object({
-//     ranked: z.array(
-//       z.object({
-//         symbol: z.string(),
-//         percentFromATH: z.string().optional(),
-//       })
-//     ),
-//   }),
-// })
-//   .parallel([
-//     stockWorkflow.withInput((ctx) => ({ symbol: ctx.symbols[0] })),
-//     stockWorkflow.withInput((ctx) => ({ symbol: ctx.symbols[1] })),
-//     stockWorkflow.withInput((ctx) => ({ symbol: ctx.symbols[2] })),
-//   ])
-//   .then(stepCompare)
-//   .commit();
+/**
+ * index.ts
+ * --------
+ * Author: DeepSeek + ChatGPT + CBOMBS
+ *
+ * Entry point for the Mastra application.
+ *
+ * Registers and wires together all agents, workflows, storage,
+ * and observability for the Stocks AI system.
+ *
+ * Core components:
+ *   - stockAgent: conversational stock analysis agent
+ *   - stockWorkflow: structured multi-step stock analysis workflow
+ *
+ * ============================================
+ * NOTES: Composite Storage Setup
+ * ============================================
+ *
+ * - LibSQLStore:
+ *     Handles primary application data (memory, workflow state, etc.)
+ *     Lightweight file-based storage ideal for local development.
+ *
+ * - DuckDB (Observability Store):
+ *     Used for observability traces (spans, logs, metrics) in local dev.
+ *     Fully supported by Mastra Studio.
+ *     Stores traces in a local embedded analytical database.
+ *
+ * - Observability (Mastra class):
+ *     Configures tracing and span exporting.
+ *     DefaultExporter automatically selects the optimal strategy
+ *     supported by the DuckDB observability adapter.
+ *
+ * - Composite Storage:
+ *     Routes each data domain to the appropriate backend:
+ *       memory/state → LibSQL
+ *       observability → DuckDB
+ *
+ * Result:
+ *   Clean local development setup with:
+ *   - persistent memory
+ *   - workflow state
+ *   - full tracing in Mastra Studio
+ */

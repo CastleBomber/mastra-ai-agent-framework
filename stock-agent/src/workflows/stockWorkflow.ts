@@ -1,17 +1,39 @@
+
 /**
  * stockWorkflow.ts
  * ----------------
- * Stock Detective Workflow
+ * Workflow: Stock Detective
  * 
- * Author: DeepSeek + ChatGPT + CBombs
- *
- * This workflow orchestrates a multi-step analysis of a stock:
+ * Orchestrates a multi-step analysis of a stock:
  * 1. Fetch current price
  * 2. Retrieve all-time high/low prices
  * 3. Fetch recent news headlines
  * 4. Calculate percentage distance from all-time high
  *
- * Built with Mastra v1.3.4 createWorkflow and createStep APIs.
+ * Answers questions like:
+ *   - "How far is AAPL from its all-time high?"
+ *   - "Show me NVDA's current price, ATH, and latest news"
+ * 
+ * Behavior:
+ *   1) Accepts stock symbol as input
+ *   2) Chains 4 steps, each passing accumulated data forward
+ *   3) Last step returns final enriched object
+ *   4) Uses build-in tools for price, historical, news data
+ * 
+ * Input:
+ *   "SPY" (into Mastra's Workflow tool)
+ *   symbol (string) - stock ticker
+ * 
+ * Output:
+ *   symbol, currentPrice, lowest, lowestDate, highest, highestDate,
+ *   headlines (array of {title, date, url}), percentFromATH (optional)
+ * 
+ * Data sources:
+ *   - Current price: mastra-stock-data.vercel.app
+ *   - Historical low/high: Finnhub (Yahoo fallback)
+ *   = News: Finnhub Company News API
+ * 
+ * Built with Mastra v1.3.4 createWorkflow and createStep APIs
  *
  */
 import { createWorkflow, createStep } from "@mastra/core/workflows";

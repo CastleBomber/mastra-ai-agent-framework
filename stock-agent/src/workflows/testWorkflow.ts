@@ -59,8 +59,6 @@ async function main() {
     const result = await run.start({
         inputData: { symbol: "SPY" }
     });
-
-    console.log(result.result);
 }
 
 main();

@@ -2,21 +2,33 @@
  * stockAgent.ts
  * -------------
  * Agent: Stock Analysis Assistant
+ * 
+ * Author: DeepSeek + ChatGPT + CBombs
  *
  * Primary conversational agent responsible for answering
  * stock-related questions using real market data.
  *
  * Capabilities:
  *   - Fetch current stock prices
- *   - Analyze historical price data (ex: lowest price)
+ *   - Analyze all-time low/high prices
  *   - Retrieve recent company news
  *
  * Memory:
- *   - Persists recent conversation context using LibSQL
+ *   - Persists recent conversation context using LibSQL (last 50 messages)
  *   - Enables continuity across user interactions
  *
- * Designed to work alongside workflows and tools to provide
- * accurate, data-driven financial responses.
+ * Instructions (system prompt):
+ *   - Use memory for personalized answers
+ *   - Format news as bulleted list with clickable titles and italic dates
+ *   - For historical queries: report highest+date from ATH, lowest+date for ATL
+ *   - Never swap or invent data
+ * 
+ * Tools:
+ *   = stockPricesCurrent -> current closing price
+ *   - stockPricesHistorical -> all-time low/high with dates
+ *   = stockNews => recent headlines (14-day window, fallback to 90 days)
+ * 
+ * Built with Mastra v1.3.4 Agent API, OpenAI GPT-4o
  */
 
 import { Agent } from "@mastra/core/agent";

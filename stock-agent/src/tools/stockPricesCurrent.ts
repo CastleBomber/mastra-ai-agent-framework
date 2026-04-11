@@ -49,8 +49,6 @@ export const stockPricesCurrent = createTool({
 
   execute: async (inputData, context) => {
     const { symbol } = inputData;
-    console.log("Tool inputData:", inputData);
-    console.log("Tool context", context);
 
     return {
       symbol,

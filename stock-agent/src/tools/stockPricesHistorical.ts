@@ -243,10 +243,8 @@ export const stockPricesHistorical = createTool({
         ipoDate: z.string().optional(),
     }),
 
-    execute: async ( inputData, context ) => {
+    execute: async ( inputData ) => {
         const { symbol } = inputData;
-        console.log("Tool inputData:", inputData);
-        console.log("Tool context", context);
 
         if (!symbol) {
             throw new Error(`Symbol is required but was not provided in the arguments. Received args: ${JSON.stringify(inputData)}`);
