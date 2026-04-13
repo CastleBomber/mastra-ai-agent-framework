@@ -12,7 +12,7 @@
  *   - What was GOLD's historical high?
  *   - What is the lowest ever price of SPY?
  *   - What is the highest price ever of WPM?
- *   - *What is the lowest ever price of GE? (public since ~1892)
+ *   - * (public since ~1892)
  *   - *What is the lowest ever price of PG? (public since 1891)
  * 
  * Strategy (robust + honest):
@@ -21,18 +21,22 @@
  *      3) If we still can't reach the IPO range, return results + a note explaining
  * 
  * Primary data source:
- *      Finnhub (profile2 + stock candles)
+ *    - Finnhub (profile2 + stock candles) 
+ *      (YahooFinance >>>)    
  * 
  * Backup data source:
- *      Yahoo Finance (via yahoo-finance2)
- *      No longer using AlphaVantage (limited dates)
+ *   - Yahoo Finance (via yahoo-finance2)
+ *   - No longer using AlphaVantage (limited dates)
  * 
  * Current price data source:
- *      mastra-stock-data.vercel.app (aggregated market data)
+ *   - used in stockPricesCurrent.ts
+ *     mastra-stock-data.vercel.app
  *
  * Notes:
- *   - profile2: currently supported Finnhub API endpoint
- *   - Designed to be extended with averages, indicators, etc.
+ *   - Different types of closes:
+ *      Official close (auction close), most “true”
+ *      Last traded price
+ *      Adjusted close (after dividends/splits)
  */
 
 import { createTool } from "@mastra/core/tools";
@@ -243,7 +247,7 @@ export const stockPricesHistorical = createTool({
         ipoDate: z.string().optional(),
     }),
 
-    execute: async ( inputData ) => {
+    execute: async (inputData) => {
         const { symbol } = inputData;
 
         if (!symbol) {

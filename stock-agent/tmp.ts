@@ -1,43 +1,57 @@
-/**
- * index.ts
- * --------
- * Author: DeepSeek + ChatGPT + CBOMBS
- *
- * Entry point for the Mastra application.
- *
- * Registers and wires together all agents, workflows, storage,
- * and observability for the Stocks AI system.
- *
- * Core components:
- *   - stockAgent: conversational stock analysis agent
- *   - stockWorkflow: structured multi-step stock analysis workflow
- *
- * ============================================
- * NOTES: Composite Storage Setup
- * ============================================
- *
- * - LibSQLStore:
- *     Handles primary application data (memory, workflow state, etc.)
- *     Lightweight file-based storage ideal for local development.
- *
- * - DuckDB (Observability Store):
- *     Used for observability traces (spans, logs, metrics) in local dev.
- *     Fully supported by Mastra Studio.
- *     Stores traces in a local embedded analytical database.
- *
- * - Observability (Mastra class):
- *     Configures tracing and span exporting.
- *     DefaultExporter automatically selects the optimal strategy
- *     supported by the DuckDB observability adapter.
- *
- * - Composite Storage:
- *     Routes each data domain to the appropriate backend:
- *       memory/state → LibSQL
- *       observability → DuckDB
- *
- * Result:
- *   Clean local development setup with:
- *   - persistent memory
- *   - workflow state
- *   - full tracing in Mastra Studio
- */
+import { createTool } from "@mastra/core/tools";
+import { z } from "zod";
+import YahooFinance from "yahoo-finance2";
+
+// ✅ REQUIRED (v3+)
+const yahooFinance = new YahooFinance();
+
+export const stockPriceOnDate = createTool({
+  id: "stockPriceOnDate",
+  description: "Get stock closing price for a specific date",
+
+  inputSchema: z.object({
+    symbol: z.string(),
+    date: z.string().describe("YYYY-MM-DD"),
+  }),
+
+  outputSchema: z.object({
+    symbol: z.string(),
+    date: z.string(),
+    close: z.number().nullable(),
+  }),
+
+  execute: async ({ inputData }) => {
+    const { symbol, date } = inputData;
+
+    const start = new Date(date);
+    const end = new Date(date);
+    end.setDate(end.getDate() + 1);
+
+    try {
+      // ✅ CORRECT API
+      const result = await yahooFinance.chart(symbol, {
+        period1: start,
+        period2: end,
+        interval: "1d",
+      });
+
+      const quotes = result?.quotes ?? [];
+      const row = quotes[0] ?? null;
+
+      return {
+        symbol,
+        date,
+        close: row?.close ?? null,
+      };
+
+    } catch (err) {
+      console.error("stockPriceOnDate error:", err);
+
+      return {
+        symbol,
+        date,
+        close: null,
+      };
+    }
+  },
+});
