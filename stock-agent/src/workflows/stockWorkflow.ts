@@ -1,4 +1,3 @@
-
 /**
  * stockWorkflow.ts
  * ----------------
@@ -39,7 +38,7 @@
 import { createWorkflow, createStep } from "@mastra/core/workflows";
 import { z } from "zod";
 import { stockPricesCurrent } from "../tools/stockPricesCurrent";
-import { stockPricesHistorical } from "../tools/stockPricesHistorical";
+import { stockExtremes } from "../tools/stockExtremes";
 import { stockNews } from "../tools/stockNews";
 
 // Step 1: Get current price
@@ -63,7 +62,7 @@ const stepGetCurrentPrice = createStep({
 });
 
 // Step 2: Get all-time low/high
-const stepGetHistoricalPrices = createStep({
+const stepGetExtremes = createStep({
     id: "getHistorical",
 
     inputSchema: z.object({
@@ -80,7 +79,7 @@ const stepGetHistoricalPrices = createStep({
     }),
 
     execute: async ({ inputData }) => {
-        const result = await stockPricesHistorical.execute({ symbol: inputData.symbol });
+        const result = await stockExtremes.execute({ symbol: inputData.symbol });
 
         return {
             ...inputData,
@@ -188,7 +187,7 @@ export const stockWorkflow = createWorkflow({
     }),
 })
     .then(stepGetCurrentPrice)
-    .then(stepGetHistoricalPrices)
+    .then(stepGetExtremes)
     .then(stepGetNews)
     .then(stepGetPercentFromATH)
     .commit();

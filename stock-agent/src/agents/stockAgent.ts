@@ -10,7 +10,7 @@
  *
  * Capabilities:
  *   - Fetch current stock prices
- *   - Analyze all-time low/high prices
+ *   - Analyze all-time low/high extreme prices
  *   - Retrieve historical prices for specific dates
  *   - Retrieve recent company news
  *
@@ -21,13 +21,13 @@
  * Instructions (system prompt):
  *   - Use memory for personalized answers
  *   - Format news as bulleted list with clickable titles and italic dates
- *   - For ATH/ATL queries: report highest+date or lowest+date
+ *   - For ATH/ATL extreme queries: report highest+date or lowest+date
  *   - For date-based queries: use tool data only (no estimation)
  *   - Never swap or invent data
  * 
  * Tools:
  *   - stockPricesCurrent -> current closing price
- *   - stockPricesHistorical -> all-time low/high with dates
+ *   - stockExtremes -> all-time low/high extremes with dates
  *   - stockPriceOnDate -> closing price for a specific date
  *   - stockNews => recent headlines (14-day window, fallback to 90 days)
  * 
@@ -41,7 +41,7 @@ import { LibSQLStore } from "@mastra/libsql";
 import * as stockPricesCurrentTools from "../tools/stockPricesCurrent";
 import { stockNews } from "../tools/stockNews";
 import { stockPriceOnDate } from "../tools/stockPriceOnDate";
-import * as stockPricesHistoricalTools from "../tools/stockPricesHistorical";
+import * as stockExtremesTools from "../tools/stockExtremes";
 
 // --- Memory Setup ---
 const mem = new Memory({
@@ -72,21 +72,31 @@ export const stockAgent = new Agent({
     - Do NOT include summaries unless the user explicitly asks for a summary, explanation, or paragraph.
     - If the user asks for more detail about a specific article, you may then use the stored summary.
 
-    When using stockPricesHistorical:
-    - If the user asks for "highest", "all-time high", "ATH", or "peak", you MUST report highest + highestDate.
-    - If the user asks for "lowest", "all-time low", "ATL", or "bottom", you MUST report lowest + lowestDate.
-    - Never swap highest/lowest. If the tool output does not include the requested metric, say you cannot answer.
-
     When using stockPriceOnDate:
     - If the user asks for a price on a specific date (e.g., "Jan 1 2020", "2020-01-01"), you MUST report close + date.
     - If the user asks for a year (e.g., "price in 2020"), use the first available trading day of that year.
     - If no data exists for the requested date (weekend/holiday), explain that the market was closed and no price is available.
     - Never invent or estimate prices. If the tool returns null, say you cannot answer.
+
+    When using stockExtremes:
+    - If the user asks for "highest", "all-time high", "ATH", or "peak", report highest + highestDate.
+    - If the user asks for "lowest", "all-time low", "ATL", or "bottom", report lowest + lowestDate.
+
+    - ALWAYS check if "note" exists in the tool response:
+      - If note exists:
+        - You MUST include it in your answer.
+        - You MUST clarify that the result is based only on available data.
+        - You MUST NOT present the result as absolute "all-time".
+
+    - If no note exists:
+      - You may present the result as true all-time.
+
+    - Never ignore the note field.
   `,
 
   tools: {
     stockPricesCurrent: stockPricesCurrentTools.stockPricesCurrent,
-    stockPricesHistorical: stockPricesHistoricalTools.stockPricesHistorical,
+    stockExtremes: stockExtremesTools.stockExtremes,
     stockNews,
     stockPriceOnDate,
   },
