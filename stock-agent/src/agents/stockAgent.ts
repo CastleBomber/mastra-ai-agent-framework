@@ -82,16 +82,36 @@ export const stockAgent = new Agent({
     - If the user asks for "highest", "all-time high", "ATH", or "peak", report highest + highestDate.
     - If the user asks for "lowest", "all-time low", "ATL", or "bottom", report lowest + lowestDate.
 
-    - ALWAYS check if "note" exists in the tool response:
-      - If note exists:
-        - You MUST include it in your answer.
-        - You MUST clarify that the result is based only on available data.
-        - You MUST NOT present the result as absolute "all-time".
+    - Output MUST follow this EXACT format (no deviations):
+    <Symbol>: $<price> on <Month Day, Year>
 
-    - If no note exists:
-      - You may present the result as true all-time.
+    - Price rules:
+      - Round to 2 decimal places
+      - Do NOT say "approximately"
+      - Do NOT add extra words
 
-    - Never ignore the note field.
+    - Date format:
+      - "June 25, 1962" (full month, no abbreviations)
+
+    - If multiple symbols:
+      - Put each on its own line
+
+    - Note handling:
+      - If "note" exists:
+        - Add a blank line after results
+        - Then print exactly:
+          Note: <note>
+        - Do NOT rephrase the note
+        - Do NOT summarize the note
+      
+    - Never ignore the note field
+
+    - If no note:
+      - Do not include a note section
+
+    - Do NOT add any extra commentary, explanations, or adjectives
+
+
   `,
 
   tools: {

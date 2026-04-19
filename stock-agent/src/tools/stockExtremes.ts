@@ -1,78 +1,49 @@
 /**
  * stockExtremes.ts
  * ------------------------
- * Tool: Analyze historical stock prices (All-time Low/High)
+ * Tool: Historical stock prices (All-time Lows/Highs)
  *
  * Computes: 
- * - all-time lowest trading price + date
- * - all-time highest trading price + date
+ *   - Lowest trading price + date
+ *   - Highest trading price + date
+ *   - *Adds a note if IPO date is out of retrieved data range
  *
- * Answers questions like:
- *   - What is the lowest price SPY has ever traded at?   $43.94 January 29th, 1993 (IPO)
- *   - What was GOLD's historical high?
- *   - What is the lowest ever price of SPY?
+ * Answers:
+ *   - What is the lowest price SPY?   $43.94 January 29th, 1993 (IPO)
  *   - What is the highest price ever of WPM?
- *   - * (public since ~1892)
+ *   - *What is the lowest ever price of PG?  (public since ~1892)
  *   - *What is the lowest ever price of PG? (public since 1891)
  * 
- * Strategy (robust + honest):
- *      1) Use Finnhub to fetch candles back to IPO date (via profile2.ipo)
- *      2) If Finnhub returns no_data / can't reach IPO range, fallback to Yahoo finance
- *      3) If we still can't reach the IPO range, return results + a note explaining
+ * Strategy (simple + honest):
+ *   1) Fetch full historical daily data from Yahoo Fincance
+ *   2) Detect earliest & latest available data points
+ *   3) Fetch IPO date (Finnhub)
+ *   4) If IPO < earliest available → attach warning note
+
+ * Data sources:
+ *    - Prices: Yahoo Finance (yahoo-finance2)
+ *    - IPO date: Finnhub (profile2 endpoint)
  * 
- * Primary data source:
- *    - Finnhub (profile2 + stock candles) 
- *      (YahooFinance >>>)    
- * 
- * Backup data source:
- *   - Yahoo Finance (via yahoo-finance2)
- *   - No longer using AlphaVantage (limited dates)
- * 
- * Current price data source:
- *   - used in stockPricesCurrent.ts
- *     mastra-stock-data.vercel.app
+ * Key behavior:
+ *    - NEVER assumes "all-time" if data is incomplete
+ *    - Returns best-known extremes + explicit limitation note
+ *    - Agent decides how to present the note   
  *
  * Notes:
- *   - Different types of closes:
- *      Official close (auction close), most “true”
- *      Last traded price
- *      Adjusted close (after dividends/splits)
- */
-
-
-
-
-
-
-
-
-/**
- * stockExtremes.ts
- * ------------------------
- * Tool: Stock price extremes (low/high) with data transparency
- *
- * Features:
- * - Computes lowest + highest price with dates
- * - Detects earliest & latest available data
- * - Compares IPO vs available data range
- * - Warns if "all-time" is NOT truly covered
- *
- * Data:
- * - Prices: Yahoo Finance (yahoo-finance2 v3)
- * - IPO: Finnhub (profile2 endpoint)
+ *    - Uses daily low/high (not close)
+ *    - Prices may differ slightly across providers (rounding/splits)
  */
 
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import YahooFinance from "yahoo-finance2";
 
-// ✅ REQUIRED for yahoo-finance2 v3
 const yahooFinance = new YahooFinance();
 
-// --- Lightweight IPO fetch (Finnhub) ---
+// Finnhub IPO fetch
 async function getIPODate(symbol: string): Promise<string | undefined> {
   try {
-    const token = process.env.FINNHUB_KEY;
+    const token = processDataStream.env.FINNHUB_KEY;
     if (!token) return undefined;
 
     const res = await fetch(
@@ -89,8 +60,8 @@ async function getIPODate(symbol: string): Promise<string | undefined> {
 }
 
 export const stockExtremes = createTool({
-  id: "stock-extrema",
-  description: "Get stock low/high with full data-range transparency",
+  id: "stock-extremes",
+  description: "Get stock low/high with full data-range transparency"
 
   inputSchema: z.object({
     symbol: z.string(),
@@ -112,16 +83,15 @@ export const stockExtremes = createTool({
     note: z.string().optional(),
   }),
 
-  // ✅ Mastra v1.5 signature (NO destructuring)
   execute: async (inputData) => {
     if (!inputData) throw new Error("Missing inputData");
 
     const { symbol } = inputData;
 
-    // --- 1. IPO date (optional) ---
+    // #1 - IPO Daate
     const ipoDate = await getIPODate(symbol);
 
-    // --- 2. Yahoo full history ---
+    // #2 - Yahoo full history
     const chart = await yahooFinance.chart(symbol, {
       period1: "1900-01-01",
       interval: "1d",
@@ -140,16 +110,16 @@ export const stockExtremes = createTool({
     let highestDate = "";
 
     let earliestTs = Infinity;
-    let latestTs = -Infinity;
+    let latestTs = - Infinity;
 
-    // --- 3. Process data ---
+    // #3 - Process data
     for (const q of quotes) {
       if (!q?.date) continue;
 
       const ts = new Date(q.date).getTime();
       if (!Number.isFinite(ts)) continue;
 
-      // Track range
+      // Track range 
       if (ts < earliestTs) earliestTs = ts;
       if (ts > latestTs) latestTs = ts;
 
@@ -165,7 +135,7 @@ export const stockExtremes = createTool({
       }
     }
 
-    // --- 4. Validate ---
+    // #4 - Validate
     if (!Number.isFinite(earliestTs) || !Number.isFinite(latestTs)) {
       throw new Error("Failed to determine data range");
     }
@@ -177,7 +147,7 @@ export const stockExtremes = createTool({
     const earliest = new Date(earliestTs).toISOString().split("T")[0];
     const latest = new Date(latestTs).toISOString().split("T")[0];
 
-    // --- 5. Honesty logic (clean + reliable) ---
+    // #5 = Honesty logic
     let note: string | undefined;
 
     const hasIncompleteHistory =
@@ -203,3 +173,8 @@ export const stockExtremes = createTool({
     };
   },
 });
+
+
+
+
+
