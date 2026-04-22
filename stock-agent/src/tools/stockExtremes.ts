@@ -11,8 +11,7 @@
  * Answers:
  *   - What is the lowest price SPY?   $43.94 January 29th, 1993 (IPO)
  *   - What is the highest price ever of WPM?
- *   - *What is the lowest ever price of PG?  (public since ~1892)
- *   - *What is the lowest ever price of PG? (public since 1891)
+ *   - What is the lowest ever price of GE?  (public since 1892) *Adds Note
  * 
  * Strategy (simple + honest):
  *   1) Fetch full historical daily data from Yahoo Fincance
