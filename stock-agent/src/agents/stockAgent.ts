@@ -91,7 +91,7 @@ export const stockAgent = new Agent({
       - Do NOT add extra words
 
     - Date format:
-      - "June 25, 1962" (full month, no abbreviations)
+      - "January 1, 1967" (full month, no abbreviations)
 
     - If multiple symbols:
       - Put each on its own line
@@ -105,6 +105,9 @@ export const stockAgent = new Agent({
         - Do NOT summarize the note
       
     - Never ignore the note field
+    
+    - Before printing ANY note, convert ALL dates inside the note (including IPO date, earliestAvailable, latestAvailable, or any ISO date strings) into the format: "Month Day, Year".
+    - Treat all tool-provided strings as raw data; always reformat dates inside them before output.
 
     - If no note:
       - Do not include a note section

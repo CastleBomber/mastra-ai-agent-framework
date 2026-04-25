@@ -8,10 +8,20 @@
  *   - Highest trading price + date
  *   - *Adds a note if IPO date is out of retrieved data range
  *
- * Answers:
- *   - What is the lowest price SPY?   $43.94 January 29th, 1993 (IPO)
+ * Questons:
+ *   - What is the lowest price SPY? 
  *   - What is the highest price ever of WPM?
- *   - What is the lowest ever price of GE?  (public since 1892) *Adds Note
+ *   - What is the lowest ever price of GE?  
+ * 
+ * Answers:
+ *   - SPY (lowest): $43.94 January 29th, 1993 (IPO)
+ *   - WPM (highest): $165.76 on March 2, 2026
+ *   - GE (lowest): (!) $2.71 on June 25, 1962  *Note: Warning, IPO 1892
+ *   - PG (lowest): (!) $0.88 on June 25, 1962 *Note: Warning, IPO 1892
+ * 
+ *   - *(!) Earliest Yahoo data available is around: 1962 (most common response:  June 25th, 1962)
+ *   - 1962 “Kennedy Slide” / “Flash Crash of 1962”
+ *   - Market decline of roughly 25–30% from its 1961 peak
  * 
  * Strategy (simple + honest):
  *   1) Fetch full historical daily data from Yahoo Fincance
@@ -42,7 +52,7 @@ const yahooFinance = new YahooFinance();
 // Finnhub IPO fetch
 async function getIPODate(symbol: string): Promise<string | undefined> {
   try {
-    const token = processDataStream.env.FINNHUB_KEY;
+    const token = process.env.FINNHUB_KEY;
     if (!token) return undefined;
 
     const res = await fetch(
@@ -60,7 +70,7 @@ async function getIPODate(symbol: string): Promise<string | undefined> {
 
 export const stockExtremes = createTool({
   id: "stock-extremes",
-  description: "Get stock low/high with full data-range transparency"
+  description: "Get stock low/high with full data-range transparency",
 
   inputSchema: z.object({
     symbol: z.string(),
@@ -109,7 +119,7 @@ export const stockExtremes = createTool({
     let highestDate = "";
 
     let earliestTs = Infinity;
-    let latestTs = - Infinity;
+    let latestTs = -Infinity;
 
     // #3 - Process data
     for (const q of quotes) {
@@ -150,13 +160,18 @@ export const stockExtremes = createTool({
     let note: string | undefined;
 
     const hasIncompleteHistory =
-      ipoDate && new Date(earliest).getTime() > new Date(ipoDate).getTime();
+      !ipoDate || new Date(earliest).getTime() > new Date(ipoDate).getTime();
 
     if (hasIncompleteHistory) {
-      note =
-        `⚠️ Incomplete history. IPO: ${ipoDate}. ` +
-        `Data available: ${earliest} → ${latest}. ` +
-        `Extremes reflect available range only.`;
+      if (ipoDate) {
+        note =
+          `⚠️ Warning: ${symbol}'s IPO date: ${ipoDate} is earlier than available data. ` +
+          `Earliest data available: ${earliest}. `;
+      } else {
+        note =
+          `⚠️ Warning: ${symbol}'s IPO date is unavailable. ` +
+          `Earliest data available: ${earliest}. `;
+      }
     }
 
     return {
