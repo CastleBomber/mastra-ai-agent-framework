@@ -26,7 +26,7 @@
  *   - Never swap or invent data
  * 
  * Tools:
- *   - stockPricesCurrent -> current closing price
+ *   - stockPriceCurrent -> current closing price
  *   - stockExtremes -> all-time low/high extremes with dates
  *   - stockPriceOnDate -> closing price for a specific date
  *   - stockNews => recent headlines (14-day window, fallback to 90 days)
@@ -38,10 +38,10 @@ import { Agent } from "@mastra/core/agent";
 import { openai } from "@ai-sdk/openai";
 import { Memory } from "@mastra/memory";
 import { LibSQLStore } from "@mastra/libsql";
-import * as stockPricesCurrentTools from "../tools/stockPricesCurrent";
+import { stockPriceCurrent } from "../tools/stockPriceCurrent";
 import { stockNews } from "../tools/stockNews";
 import { stockPriceOnDate } from "../tools/stockPriceOnDate";
-import * as stockExtremesTools from "../tools/stockExtremes";
+import { stockExtremes } from "../tools/stockExtremes";
 
 // --- Memory Setup ---
 const mem = new Memory({
@@ -52,6 +52,12 @@ const mem = new Memory({
   }),
 });
 
+const today = new Date().toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
 export const stockAgent = new Agent({
   id: "stock-agent",
   name: "Stock Agent",
@@ -59,67 +65,58 @@ export const stockAgent = new Agent({
   memory: mem,
 
   instructions: `
+    Today's date is ${today}. Use this as the current real-world date.
+
     You are a helpful assistant.
 
-    When relevant, use the remembered information to give more personalized and consistent answers.
-    Do not invent memory that was not provided.
+    Use remembered conversation context when helpful. Do not invent memory or facts.
 
-    When using stockNews:
-    - Present results as a bulleted list.
-    - The article title should be a clickable hyperlink to the article.
-    - On the next line, show the publication date in italics, with no "Date:" prefix, formatted like: JAN 25th.
-    - Do NOT print a separate "Read more" line.
-    - Do NOT include summaries unless the user explicitly asks for a summary, explanation, or paragraph.
-    - If the user asks for more detail about a specific article, you may then use the stored summary.
+    General rules:
+    - Never guess prices, dates, or market data.
+    - If a tool returns no data, say you cannot confirm the answer.
+    - Keep responses clean and easy to read.
+    - Use this date format for all final answers: Month Day, Year (example: January 1, 1967).
+
+    When using stockPriceCurrent:
+    - Report the latest available price.
+    - Format: <Symbol>: $<price>
+    - Round to 2 decimals.
+
 
     When using stockPriceOnDate:
-    - If the user asks for a price on a specific date (e.g., "Jan 1 2020", "2020-01-01"), you MUST report close + date.
-    - If the user asks for a year (e.g., "price in 2020"), use the first available trading day of that year.
-    - If no data exists for the requested date (weekend/holiday), explain that the market was closed and no price is available.
-    - Never invent or estimate prices. If the tool returns null, say you cannot answer.
+    - If the user asks for a specific date, report the closing price for that date.
+    - If the user asks for a year, use the first available trading day of that year.
+    - If the market was closed or no data exists, explain that no trading price is available.
+    - Format: <Symbol>: $<price> on <Month Day, Year>
 
     When using stockExtremes:
-    - If the user asks for "highest", "all-time high", "ATH", or "peak", report highest + highestDate.
-    - If the user asks for "lowest", "all-time low", "ATL", or "bottom", report lowest + lowestDate.
+    - If the user asks for highest / ATH / peak, use highest + highestDate.
+    - If the user asks for lowest / ATL / bottom, use lowest + lowestDate.
+    - Format: <Symbol>: $<price> on <Month Day, Year>
+    - Round to 2 decimals.
+    - If multiple symbols, place each on its own line.
 
-    - Output MUST follow this EXACT format (no deviations):
-    <Symbol>: $<price> on <Month Day, Year>
+    If the tool includes a note:
+    - Always include it after a blank line.
+    - Format exactly:
+      Note: <note>
+    - Reformat any dates inside the note to Month Day, Year.
+    - Do not ignore, rewrite, summarize, or remove the note.
 
-    - Price rules:
-      - Round to 2 decimal places
-      - Do NOT say "approximately"
-      - Do NOT add extra words
+    When using stockNews:
+    - Use bullet points.
+    - Make article titles clickable links.
+    - On the next line, show the publish date in italics.
+    - Format dates like: JAN 25th
+    - Do not add summaries unless requested.
+    - Do not add a separate "Read more" line.
 
-    - Date format:
-      - "January 1, 1967" (full month, no abbreviations)
-
-    - If multiple symbols:
-      - Put each on its own line
-
-    - Note handling:
-      - If "note" exists:
-        - Add a blank line after results
-        - Then print exactly:
-          Note: <note>
-        - Do NOT rephrase the note
-        - Do NOT summarize the note
-      
-    - Never ignore the note field
-    
-    - Before printing ANY note, convert ALL dates inside the note (including IPO date, earliestAvailable, latestAvailable, or any ISO date strings) into the format: "Month Day, Year".
-    - Treat all tool-provided strings as raw data; always reformat dates inside them before output.
-
-    - If no note:
-      - Do not include a note section
-
-    - Do NOT add any extra commentary, explanations, or adjectives
-
-
+    Be confident, helpful, and concise.
   `,
 
   tools: {
-    stockPricesCurrent: stockPricesCurrentTools.stockPricesCurrent,
-    stockExtremes: stockExtremesTools.stockExtremes,
+    stockPriceCurrent,
+    stockExtremes,
     stockNews,
     stockPriceOnDate,
   },

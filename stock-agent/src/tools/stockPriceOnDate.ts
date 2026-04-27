@@ -1,5 +1,5 @@
 /**
- * stockPricesOnDate.ts
+ * stockPriceOnDate.ts
  * ------------------------
  * Tool: 
  *

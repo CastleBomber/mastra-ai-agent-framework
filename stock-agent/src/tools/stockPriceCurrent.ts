@@ -1,5 +1,5 @@
 /**
- * stockPricesCurrent.ts
+ * stockPriceCurrent.ts
  * ---------------------
  * Tool: Fetch current stock price
  *
@@ -12,7 +12,7 @@
  * Data source:
  *   mastra-stock-data.vercel.app (aggregated market data)
  * 
- * Historical price data sources (stockPricesHistorical):
+ * Historical price data sources (stockPriceOnDtae):
  *      Finnhub (profile2 + stock candles)
  *      Yahoo Finance (via yahoo-finance2)
  *      No longer using AlphaVantage (limited dates)
@@ -34,7 +34,7 @@ const getStockPrice = async (symbol: string) => {
   return data.prices["4. close"];
 };
 
-export const stockPricesCurrent = createTool({
+export const stockPriceCurrent = createTool({
   id: "get-stock-price",
   description: "Fetches the last day's closing stock price for a given symbol",
 

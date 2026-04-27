@@ -37,7 +37,7 @@
  */
 import { createWorkflow, createStep } from "@mastra/core/workflows";
 import { z } from "zod";
-import { stockPricesCurrent } from "../tools/stockPricesCurrent";
+import { stockPriceCurrent } from "../tools/stockPriceCurrent";
 import { stockExtremes } from "../tools/stockExtremes";
 import { stockNews } from "../tools/stockNews";
 
@@ -52,7 +52,7 @@ const stepGetCurrentPrice = createStep({
     }),
 
     execute: async ({ inputData }) => {
-        const result = await stockPricesCurrent.execute({ symbol: inputData.symbol });
+        const result = await stockPriceCurrent.execute({ symbol: inputData.symbol });
 
         return {
             symbol: inputData.symbol,
