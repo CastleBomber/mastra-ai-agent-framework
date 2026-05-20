@@ -1,5 +1,5 @@
 /**
- * testStockWorkflow.ts
+ * testStockATHWorkflow.ts
  * --------------------
  * Test Script: Execute Stock Detective Workflow
  *
@@ -12,7 +12,7 @@
  *   4) Calculate percent distance from ATH
  *
  * Example usage:
- *   npx tsx testStockWorkflow.ts
+ *   npx tsx testStockATHWorkflow.ts
  * 
  *   Change symbol
  *   symbol: "SPY"
@@ -43,17 +43,17 @@
  *   - Logs final aggregated workflow output
  */
 import { Mastra } from "@mastra/core";
-import { stockWorkflow } from "./stockWorkflow";
+import { stockATHWorkflow } from "./stockATHWorkflow";
 
 async function main() {
     const mastra = new Mastra({
         workflows: {
-            stockWorkflow,
+            stockATHWorkflow,
         },
     });
 
     const run = await mastra
-        .getWorkflow("stockWorkflow")
+        .getWorkflow("stockATHWorkflow")
         .createRun();
 
     const result = await run.start({

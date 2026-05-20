@@ -1,5 +1,5 @@
 /**
- * compareStocksWorkflow.ts
+ * compareStocksATHWorkflow.ts
  * ------------------------
  * Workflow: Compare Stocks by Distance to All-time high (ATH)
  * 
@@ -12,7 +12,7 @@
  * 
  * Behavior:
  *   1) Accepts array of stock symbols
- *   2) Executes stockWorkflow for each symbol in parallel
+ *   2) Executes stockATHWorkflow for each symbol in parallel
  *   3) Aggregates results, extracts percentFromATH
  *   4) Sorts symbols ascending by percentage (closest to ATH first)
  * 
@@ -29,7 +29,7 @@
 
 import { createWorkflow, createStep } from "@mastra/core/workflows";
 import { z } from "zod";
-import { stockWorkflow } from "./stockWorkflow";
+import { stockATHWorkflow } from "./stockATHWorkflow";
 import { Mastra } from "@mastra/core";
 
 const stepCompare = createStep({
@@ -49,14 +49,14 @@ const stepCompare = createStep({
     execute: async ({ inputData }) => {
         // Used to register and run workflows inside a Mastra runtime
         const mastra = new Mastra({
-            workflows: { stockWorkflow },
+            workflows: { stockATHWorkflow },
         });
 
         const results = await Promise.all(
             // Dynamic input of stock symbols
             inputData.symbols.map(async (symbol) => {
                 const run = await mastra
-                .getWorkflow("stockWorkflow")
+                .getWorkflow("stockATHWorkflow")
                 .createRun();
 
                 const result = await run.start({
@@ -81,7 +81,7 @@ const stepCompare = createStep({
     },
 });
 
-export const compareStocksWorkflow = createWorkflow({
+export const compareStocksATHWorkflow = createWorkflow({
     id: "stocks-compare-ATH",
 
     inputSchema: z.object({
@@ -98,5 +98,4 @@ export const compareStocksWorkflow = createWorkflow({
 })
     .then(stepCompare)
     .commit();
-
 

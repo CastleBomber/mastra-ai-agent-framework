@@ -1,7 +1,7 @@
 /**
- * stockWorkflow.ts
+ * stockATHWorkflow.ts
  * ----------------
- * Workflow: Stock Detective
+ * Workflow: Stock ATH
  * 
  * Orchestrates a multi-step analysis of a stock:
  * 1. Fetch current price
@@ -162,7 +162,7 @@ const stepGetPercentFromATH = createStep({
 });
 
 // Define the workflow
-export const stockWorkflow = createWorkflow({
+export const stockATHWorkflow = createWorkflow({
     id: "stock-ATH",
     name: "Stock ATH",
 

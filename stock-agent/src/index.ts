@@ -10,7 +10,7 @@
  *
  * Core components:
  *   - stockAgent: conversational stock analysis agent
- *   - stockWorkflow: structured multi-step stock analysis workflow
+ *   - stockATHWorkflow: structured multi-step stock analysis workflow
  * 
  * ============================================
  * NOTES: Composite Storage Setup
@@ -49,8 +49,8 @@ import { MastraCompositeStore } from "@mastra/core/storage";
 import { LibSQLStore } from "@mastra/libsql";
 import { Observability, DefaultExporter, SensitiveDataFilter } from "@mastra/observability";
 import { stockAgent } from "./agents/stockAgent";
-import { stockWorkflow } from "./workflows/stockWorkflow";
-import { compareStocksWorkflow } from "./workflows/compareStocksWorkflow";
+import { stockATHWorkflow } from "./workflows/stockATHWorkflow";
+import { compareStocksATHWorkflow } from "./workflows/compareStocksATHWorkflow";
 import { DuckDBStore } from "@mastra/duckdb";
 
 const compositeStorage = new MastraCompositeStore({
@@ -66,7 +66,7 @@ const compositeStorage = new MastraCompositeStore({
 
 export const mastra = new Mastra({
   agents: { stockAgent },
-  workflows: { stockWorkflow, compareStocksWorkflow },
+  workflows: { stockATHWorkflow, compareStocksATHWorkflow },
   storage: compositeStorage,
   observability: new Observability({
     configs: {
