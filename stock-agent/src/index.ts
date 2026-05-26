@@ -52,6 +52,8 @@ import { stockAgent } from "./agents/stockAgent";
 import { stockATHWorkflow } from "./workflows/stockATHWorkflow";
 import { compareStocksATHWorkflow } from "./workflows/compareStocksATHWorkflow";
 import { DuckDBStore } from "@mastra/duckdb";
+import { quickStockAnalysisWorkflow } from "./workflows/quickStockAnalysisWorkflow";
+
 
 const compositeStorage = new MastraCompositeStore({
   id: "composite-storage",
@@ -66,15 +68,19 @@ const compositeStorage = new MastraCompositeStore({
 
 export const mastra = new Mastra({
   agents: { stockAgent },
-  workflows: { stockATHWorkflow, compareStocksATHWorkflow },
+
+  workflows: { 
+    stockATHWorkflow, 
+    compareStocksATHWorkflow,
+    quickStockAnalysisWorkflow,
+  },
+
   storage: compositeStorage,
   observability: new Observability({
     configs: {
       default: {
         serviceName: "stocks-ai",
-        exporters: [
-          new DefaultExporter(),
-        ],
+        exporters: [new DefaultExporter()],
         spanOutputProcessors: [new SensitiveDataFilter()],
       },
     },

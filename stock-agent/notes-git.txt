@@ -8,3 +8,12 @@ git log -1 --format=%B
 # Show 2 levels deep of subfolders
 
 tree -d -L 2
+
+
+
+
+
+
+# Helps with resolving errors
+rm -rf build/ node_modules/ package-lock.json
+npm install

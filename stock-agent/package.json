@@ -21,6 +21,7 @@
     "axios": "^1.13.2",
     "dotenv": "^17.2.3",
     "mastra": "^1.4.0",
+    "tsconfig-paths": "^4.2.0",
     "yahoo-finance2": "^3.13.0",
     "zod": "^3.25.76"
   },

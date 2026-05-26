@@ -3,8 +3,11 @@
 
 
 !!!
-run from the root directory: stock-agent/
+run from the root directory: 
+
+stock-agent/
 npx mastra dev --dir src
+
 !!!
 
 
