@@ -9,3 +9,15 @@ Will need to go through every file in the project and update imports
 # [package.json] Version issues
 Run and update to the appropriate version #'s from:
 npm view mastra versions
+
+
+
+
+# Migration issue
+# DuckDB observability DB schema is old
+rm -rf .mastra
+rm -f src/public/mastra.duckdb*
+rm -f mastra.duckdb*
+
+
+

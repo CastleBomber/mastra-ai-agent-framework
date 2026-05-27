@@ -39,11 +39,11 @@ import { Agent } from "@mastra/core/agent";
 import { openai } from "@ai-sdk/openai";
 import { Memory } from "@mastra/memory";
 import { LibSQLStore } from "@mastra/libsql";
-import { stockPriceCurrent } from "../tools/stockPriceCurrent";
-import { stockNews } from "../tools/stockNews";
-import { stockPriceOnDate } from "../tools/stockPriceOnDate";
-import { stockExtremes } from "../tools/stockExtremes";
-import { currentDateTime } from "../tools/currentDateTime";
+import { stockPriceCurrent } from "@/tools/stockPriceCurrent";
+import { stockNews } from "@/tools/stockNews";
+import { stockPriceOnDate } from "@/tools/stockPriceOnDate";
+import { stockExtremes } from "@/tools/stockExtremes";
+import { currentDateTime } from "@/tools/currentDateTime";
 
 // --- Memory Setup ---
 const mem = new Memory({
