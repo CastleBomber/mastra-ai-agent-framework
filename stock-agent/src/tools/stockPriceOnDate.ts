@@ -1,21 +1,35 @@
 /**
  * stockPriceOnDate.ts
- * ------------------------
- * Tool: 
+ * -------------------
+ * Tool: Get stock closing price for a specific date
  *
- * Computes: 
-
+ * Fetches the closing price of a stock on a given trading day using Yahoo Finance.
  *
  * Answers questions like:
-
- * 
- * Strategy:
- * 
- * Primary data source:
- *   - Yahoo Finance (via yahoo-finance2)
- *     (better than Finnhub)
+ *   - "What was the closing price of SPY on March 15, 2025?"
+ *   - "How much did NVDA close at on January 1, 2024?"
+ *
+ * Behavior:
+ *   1) Accepts symbol and date (YYYY-MM-DD)
+ *   2) Queries Yahoo Finance chart API for a 1-day range
+ *   3) Returns the close price of the first (and only) trading day
+ *
+ * Input:
+ *   symbol (string) – stock ticker (e.g., "SPY")
+ *   date (string) – trading date in YYYY-MM-DD format
+ *
+ * Output:
+ *   {
+ *     symbol,
+ *     date,
+ *     close      // number or null if market closed
+ *   }
  *
  * Notes:
+ *   - Uses Yahoo Finance (yahoo-finance2) for reliable historical data.
+ *   - Returns null if the market was closed (weekend, holiday) or no data found.
+ *   - Timezone-safe using UTC date boundaries.
+ * 
  */
 
 import { createTool } from "@mastra/core/tools";

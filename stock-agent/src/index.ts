@@ -53,7 +53,7 @@ import { stockAgent } from "./agents/stockAgent";
 import { stockATHWorkflow } from "./workflows/stockATHWorkflow";
 import { compareStocksATHWorkflow } from "./workflows/compareStocksATHWorkflow";
 import { DuckDBStore } from "@mastra/duckdb";
-//import { quickStockAnalysisWorkflow } from "./workflows/quickStockAnalysisWorkflow";
+import { quickStockAnalysisWorkflow } from "./workflows/quickStockAnalysisWorkflow";
 
 
 const compositeStorage = new MastraCompositeStore({
@@ -73,7 +73,7 @@ export const mastra = new Mastra({
   workflows: { 
     stockATHWorkflow, 
     compareStocksATHWorkflow,
-//    quickStockAnalysisWorkflow,
+    quickStockAnalysisWorkflow,
   },
 
   storage: compositeStorage,

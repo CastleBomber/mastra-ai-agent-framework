@@ -44,6 +44,7 @@ import { stockNews } from "@/tools/stockNews";
 import { stockPriceOnDate } from "@/tools/stockPriceOnDate";
 import { stockExtremes } from "@/tools/stockExtremes";
 import { currentDateTime } from "@/tools/currentDateTime";
+import { quickStockAnalysisTool } from "@/tools/quickStockAnalysisTool";
 
 // --- Memory Setup ---
 const mem = new Memory({
@@ -119,5 +120,6 @@ export const stockAgent = new Agent({
     stockExtremes,
     stockNews,
     stockPriceOnDate,
+    quickStockAnalysisTool,
   },
 });
