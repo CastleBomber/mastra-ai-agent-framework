@@ -73,6 +73,7 @@ const stepGetExtremes = createStep({
         lowestDate: z.string(),
         highest: z.number(),
         highestDate: z.string(),
+        note: z.string().optional(),
     }),
 
     execute: async ({ inputData }) => {
@@ -99,6 +100,7 @@ const stepGetPercentFromATH = createStep({
         lowestDate: z.string(),
         highest: z.number(),
         highestDate: z.string(),
+        note: z.string().optional(),
     }),
 
     outputSchema: z.object({
@@ -109,6 +111,7 @@ const stepGetPercentFromATH = createStep({
         highest: z.number(),
         highestDate: z.string(),
         percentFromATH: z.string().optional(),
+        note: z.string().optional(),
     }),
 
     execute: async ({ inputData }) => {
@@ -147,6 +150,7 @@ export const stockATHWorkflow = createWorkflow({
         highest: z.number(),
         highestDate: z.string(),
         percentFromATH: z.string().optional(),
+        note: z.string().optional(),
     }),
 })
     .then(stepGetCurrentPrice)

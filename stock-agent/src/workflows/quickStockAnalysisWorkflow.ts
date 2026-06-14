@@ -101,7 +101,15 @@ const stepGetExtremes = createStep({
 const stepPercentFromATH = createStep({
   id: "percentFromATH",
 
-  inputSchema: z.any(),
+  inputSchema: z.object({
+    symbol: z.string(),
+    currentPrice: z.string(),
+    highest: z.number(),
+    highestDate: z.string(),
+    lowest: z.number(),
+    lowestDate: z.string(),
+    note: z.string().optional(),
+  }),
 
   outputSchema: z.object({
     symbol: z.string(),
@@ -111,6 +119,7 @@ const stepPercentFromATH = createStep({
     lowest: z.number(),
     lowestDate: z.string(),
     percentFromATH: z.string(),
+    note: z.string().optional(),
   }),
 
   execute: async ({ inputData }) => {
@@ -142,6 +151,7 @@ export const quickStockAnalysisWorkflow = createWorkflow({
     lowest: z.number(),
     lowestDate: z.string(),
     percentFromATH: z.string(),
+    note: z.string().optional(),
   }),
 })
   .then(stepGetPrice)

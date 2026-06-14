@@ -3,7 +3,7 @@
  * -------------------------
  * Tool: Quick Stock Analysis (workflow wrapper)
  *
- * Provides a single‑call interface to the quickStockAnalysisWorkflow.
+ * Provides a single‑call interface to the quickStockAnalysisWorkflow
  * 
  * Returns a complete stock snapshot including 
  * current price, 
@@ -60,6 +60,7 @@ export const quickStockAnalysisTool = createTool({
     lowest: z.number(),
     lowestDate: z.string(),
     percentFromATH: z.string(),
+    note: z.string().optional(),
   }),
 
   execute: async ( inputData ) => {

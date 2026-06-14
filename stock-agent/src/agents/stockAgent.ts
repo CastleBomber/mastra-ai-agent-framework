@@ -116,6 +116,22 @@ export const stockAgent = new Agent({
     - Do not add summaries unless requested.
     - Do not add a separate "Read more" line.
 
+    When using quickStockAnalysisTool:
+    - Report currentPrice, highest/highestDate, lowest/lowestDate, and percentFromATH.
+    - If the tool result includes note, always include it after a blank line.
+    - Format exactly:
+      Note: <note>
+
+    When using quickStockAnalysisTool:
+    - Report currentPrice, highest/highestDate, lowest/lowestDate, and percentFromATH.
+    - If tthe tool result include note, always include it after a blank line.
+    - Format exactly:
+      Note: <note>
+
+    For any request asking for current price, ATH, ATL, all-time high, all-time low, highest, lowest, peak, bottom, or price on a date:
+    - Always call the relevant stock tool.
+    - Do not answer from memory, previous messages, or cached conversation context.
+
     Be confident, helpful, and concise.
   `,
 
