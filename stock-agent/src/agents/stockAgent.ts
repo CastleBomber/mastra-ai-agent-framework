@@ -58,7 +58,7 @@ const mem = new Memory({
 export const stockAgent = new Agent({
   id: "stock-agent",
   name: "Stock Agent",
-  model: 'openai/gpt-4o',
+  model: openai("gpt-4o"),
   memory: mem,
 
   instructions: `
@@ -72,6 +72,11 @@ export const stockAgent = new Agent({
     - Keep responses clean and easy to read.
     - Use this date format for all final answers: Month Day, Year.
     - When asked for today's date, current time, or current day, use currentDateTime.
+
+    When the user message starts with "/stock" followed by a symbol (e.g., "/stock AAPL"), 
+    call the "quick-stock-analysis" tool with that symbol. Use the tool's result to answer. 
+    Do not call individual tools like stockPriceCurrent, stockExtremes, or 
+    stockNews for that request.
 
     When using currentDateTime:
     - Report the returned date/time exactly.

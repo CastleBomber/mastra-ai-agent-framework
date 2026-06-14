@@ -40,12 +40,18 @@
 
 import { quickStockAnalysisWorkflow } from "@/workflows/quickStockAnalysisWorkflow";
 import { createTool } from "@mastra/core/tools";
+import { z } from "zod";
 
 
 export const quickStockAnalysisTool = createTool({
   id: "quick-stock-analysis",
-  description: "Run quick stock analysis for a symbol. Returns current price, all-time high/low, and percentage from all-time high.",
-  inputSchema: z.object({ symbol: z.string() }),
+
+  description: "Run quick stock analysis for a symbol. Returns current price, ATH/ATL, and percentage from ATH.",
+
+  inputSchema: z.object({
+    symbol: z.string()
+  }),
+
   outputSchema: z.object({
     symbol: z.string(),
     currentPrice: z.string(),
@@ -55,12 +61,25 @@ export const quickStockAnalysisTool = createTool({
     lowestDate: z.string(),
     percentFromATH: z.string(),
   }),
-  execute: async ({ inputData }) => {
-    const run = await quickStockAnalysisWorkflow.createRunAsync();
-    const result = await run.start({ 
-      inputData: { symbol: inputData.symbol } 
+
+  execute: async ( inputData ) => {
+    const symbol = inputData.symbol.trim().toUpperCase();
+
+    const run = await quickStockAnalysisWorkflow.createRun();
+
+    const result = await run.start({
+      inputData: {
+        symbol,
+      },
     });
-    return result.results;
+
+    // success guard
+    if (result.status !== "success") {
+      console.error("quickStockAnalysisWorkflow failed", JSON.stringify(result, null, 2));
+      throw new Error("Workflow failed");
+    }
+
+    return result.result;
   },
 });
 

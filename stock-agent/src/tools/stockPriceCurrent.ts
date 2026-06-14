@@ -47,7 +47,7 @@ export const stockPriceCurrent = createTool({
     currentPrice: z.string(),
   }),
 
-  execute: async (inputData, context) => {
+  execute: async (inputData) => {
     const { symbol } = inputData;
 
     return {

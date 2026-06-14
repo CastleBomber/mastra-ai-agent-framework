@@ -78,6 +78,7 @@ const stepGetExtremes = createStep({
     highestDate: z.string(),
     lowest: z.number(),
     lowestDate: z.string(),
+    note: z.string().optional(),
   }),
 
   execute: async ({ inputData }) => {
@@ -91,6 +92,7 @@ const stepGetExtremes = createStep({
       highestDate: result.highestDate,
       lowest: result.lowest,
       lowestDate: result.lowestDate,
+      note: result.note,
     };
   },
 });

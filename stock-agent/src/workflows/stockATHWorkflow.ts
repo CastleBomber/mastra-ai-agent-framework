@@ -88,37 +88,6 @@ const stepGetExtremes = createStep({
     }
 });
 
-// Step 3x: Get recent news
-// const stepGetNews = createStep({
-//     id: "getNews",
-
-//     inputSchema: z.any(),
-//     outputSchema: z.object({
-//         symbol: z.string(),
-//         currentPrice: z.string(),
-//         lowest: z.number(),
-//         lowestDate: z.string(),
-//         highest: z.number(),
-//         highestDate: z.string(),
-//         headlines: z.array(
-//             z.object({
-//                 title: z.string(),
-//                 date: z.string(),
-//                 url: z.string(),
-//             })
-//         ),
-//     }),
-
-//     execute: async ({ inputData }) => {
-//         const result = await stockNews.execute({ symbol: inputData.symbol });
-
-//         return {
-//             ...inputData,
-//             headlines: result.headlines,
-//         };
-//     }
-// });
-
 // Step 3: Calculate distance from ATH
 const stepGetPercentFromATH = createStep({
     id: "getPercentFromATH",
