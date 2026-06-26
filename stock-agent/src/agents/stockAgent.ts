@@ -46,6 +46,7 @@ import { stockExtremes } from "@/tools/stockExtremes";
 import { currentDateTime } from "@/tools/currentDateTime";
 import { quickStockAnalysisTool } from "@/tools/quickStockAnalysisTool";
 
+
 // --- Memory Setup ---
 const mem = new Memory({
   options: { lastMessages: 50 },

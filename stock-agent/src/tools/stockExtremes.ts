@@ -19,6 +19,7 @@
  *   - GE (lowest): (!) $2.71 on June 25, 1962  *Note: Warning, IPO 1892
  *   - PG (lowest): (!) $0.88 on June 25, 1962 *Note: Warning, IPO 1892
  * 
+ * Insights:
  *   - *(!) Earliest Yahoo data available is around: 1962 (most common response:  June 25th, 1962)
  *   - 1962 “Kennedy Slide” / “Flash Crash of 1962”
  *   - Market decline of roughly 25–30% from its 1961 peak
@@ -48,6 +49,15 @@ import { z } from "zod";
 import YahooFinance from "yahoo-finance2";
 
 const yahooFinance = new YahooFinance();
+
+type SplitInfo = {
+  date: string;
+  ratio: string;
+  numerator: number;
+  denominator: number;
+  rawPriceEstimate?: number;
+  adjustedPriceEstimate?: number;
+};
 
 // Finnhub IPO fetch
 async function getIPODate(symbol: string): Promise<string | undefined> {
@@ -89,6 +99,24 @@ export const stockExtremes = createTool({
     latestAvailable: z.string(),
 
     ipoDate: z.string().optional(),
+
+    hasSplits: z.boolean().optional(),
+    splits: z.array(
+      z.object({
+        date: z.string(),
+        ratio: z.string(),
+        numerator: z.number(),
+        denominator: z.number(),
+        rawPriceEstimate: z.number().optional(),
+        adjustedPriceEstimate: z.number().optional(),
+      })
+    ).optional(),
+
+    hasSplits: z.boolean().optional(),
+    splits: z.array(
+      
+    )
+
     note: z.string().optional(),
   }),
 
