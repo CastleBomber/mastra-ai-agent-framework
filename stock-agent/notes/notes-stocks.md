@@ -40,3 +40,24 @@ not a modern IPO in today’s standardized exchange"
 
 > "Modern finance APIs often store a listing date recognized in current market databases, 
 not the original first time shares were ever offered/traded."
+
+
+
+
+# SEC 10-K
+
+<br>
+
+- A Form 10-K is an annual report required by the SEC that provides 
+    - a comprehensive overview of a public company's business and financial performance.
+
+# Other docs for RAG
+
+<br>
+
+- Earnings call transcripts
+- Investor presentations
+- Annual reports
+- Analyst reports
+
+

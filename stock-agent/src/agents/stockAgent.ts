@@ -32,7 +32,7 @@
  *   - stockPriceOnDate -> closing price for a specific date
  *   - stockNews -> recent headlines (14-day window, fallback to 90 days)
  * 
- * Built with Mastra v1.4.x Agent API, OpenAI GPT-4o
+ * Built with Mastra v1.4.x+ Agent API, OpenAI GPT-4o
  */
 
 import { Agent } from "@mastra/core/agent";
@@ -119,20 +119,17 @@ export const stockAgent = new Agent({
 
     When using quickStockAnalysisTool:
     - Report currentPrice, highest/highestDate, lowest/lowestDate, and percentFromATH.
-    - If the tool result includes note, always include it after a blank line.
-    - Format exactly:
-      Note: <note>
-
-    When using quickStockAnalysisTool:
-    - Report currentPrice, highest/highestDate, lowest/lowestDate, and percentFromATH.
-    - If tthe tool result include note, always include it after a blank line.
+    - If the tool result includes note, always include the full note after a blank line.
     - Format exactly:
       Note: <note>
 
     For any request asking for current price, ATH, ATL, all-time high, all-time low, highest, lowest, peak, bottom, or price on a date:
-    - Always call the relevant stock tool.
-    - Do not answer from memory, previous messages, or cached conversation context.
-
+    - Always call the relevant stock tool every time.
+    - Do not answer from memory, previous messages, cached conversation context, or prior tool results.
+    - Even if the same symbol was asked earlier in the conversation, call the tool again.
+    - For ATH, ATL, all-time high, all-time low, highest, lowest, peak, or bottom, call stockExtremes.
+    - If stockExtremes returns a note, always include the full note after a blank line.
+    
     Be confident, helpful, and concise.
   `,
 
